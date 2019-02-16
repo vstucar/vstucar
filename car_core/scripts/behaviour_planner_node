@@ -4,7 +4,64 @@
 # This file is licensed under MIT license.
 # See the LICENSE file in the project root for more information.
 
-from car_core.behaviour_planner.behaviour_planner import main
+"""
+behaviour_planner - perform design-choosen for maneuvers based on car position,
+enveronmet map and rools. It's hold line-choosing, turns, stops, intersections
+crossing etc.
+
+It's provide target information to the motion_planner:
+  - trajectory (@reference_path)
+  - next watpoint on this pase
+
+For now it's just dummy planner. Simply get input @global_path and create waypoint
+to the behaviour layer
+"""
+
+import rospy
+from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
+from car_core.common import msgs_helpers, geom_helpers
+from car_core.behaviour_planner.behaviour_planner import BehaviourPlanner
+from car_msgs.msg import MotionPlanningTarget
+from car_core.common.rviz_helpers import FigureHelper
+
+WAYPOINTS_GAP = 2        # Distance between waypoints
+ENDS_GAP = 0.5           # Reference_path end margins, before current point, after next waypoint
+TARGET_SPEED = 1         # Target speed (for now)
+REPLAN_FREQ = 1          # Replanning frequency
+IS_VIS = True            # Display debug
+
+car_pose = None
+global_path = None
+
+def path_callback(path):
+    global global_path
+    global_path = path
+
+def pose_callback(pose):
+    global car_pose
+    car_pose = pose
 
 if __name__ == "__main__":
-    main()
+    rospy.init_node('behaviour_planner_node')
+    rospy.loginfo("behaviour_planner_node started")
+
+    rospy.Subscriber('/car_pose', PoseStamped, pose_callback)
+    rospy.Subscriber('/global_path', Path, path_callback)
+    target_pub = rospy.Publisher('/next_target', MotionPlanningTarget, queue_size=1)
+
+    if IS_VIS:
+        waypoint_marker = FigureHelper('/viz/waypoint', (1.0, 0.0, 0.0, 1.0), (0.2, 0.2, 0.2))
+
+    planner = BehaviourPlanner(WAYPOINTS_GAP, ENDS_GAP, TARGET_SPEED)
+
+    rate = rospy.Rate(REPLAN_FREQ)
+    while not rospy.is_shutdown():
+        target = planner.plan(global_path, car_pose)
+        if target != None:
+            target_pub.publish(target)
+
+            if IS_VIS:
+                waypoint_marker.publish(target.pose.position)
+
+        rate.sleep()

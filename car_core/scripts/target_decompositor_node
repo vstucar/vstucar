@@ -1,0 +1,30 @@
+#!/usr/bin/python
+
+# This file is licensed under MIT license.
+# See the LICENSE file in the project root for more information.
+
+# This node is usef for debug
+# Decompose car_msgs/MotionPlanningTarget to common message types
+# to display them in RViz
+
+import rospy
+from car_msgs.msg import MotionPlanningTarget
+from nav_msgs.msg import Path
+from geometry_msgs.msg import PoseStamped
+
+def target_callback(msg):
+    pose = PoseStamped()
+    pose.header = msg.header
+    pose.pose = msg.pose
+    path_pub.publish(msg.path)
+    pose_pub.publish(pose)
+
+if __name__ == "__main__":
+    rospy.init_node('target_decompositor_node')
+    rospy.loginfo("target_decompositor_node started")
+
+    rospy.Subscriber('/next_target', MotionPlanningTarget, target_callback)
+    path_pub = rospy.Publisher('/viz/next_target/path', Path, queue_size=1)
+    pose_pub = rospy.Publisher('/viz/next_target/pose', PoseStamped, queue_size=1)
+
+    rospy.spin()

@@ -31,3 +31,5 @@ include_directories(
 
 # how to depend from messages
 # add_dependencies(target car_msgs_generate_messages_cpp)
+
+catkin_add_nosetests(tests/test_py_common.py)
