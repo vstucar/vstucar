@@ -13,7 +13,7 @@ from car_msgs.msg import MotionPlanningTarget
 WORLD_FRAME_ID = 'map'
 class BehaviourPlanner:
     """
-    Perform behaviour planning.
+    Performs behaviour planning.
     For now just return @global_path with waypoint on it
     """
 

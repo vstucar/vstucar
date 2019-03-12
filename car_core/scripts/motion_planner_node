@@ -3,3 +3,54 @@
 
 # This file is licensed under MIT license.
 # See the LICENSE file in the project root for more information.
+
+"""
+motion_planner performs local motion planning based on
+car position, environment:
+    - obstacle avoidance
+    - create path reachable by car kinematic, physics etc
+
+This node gets motion target (pos & speed) from behaviour_planner_node
+and create path in state space for controller node.
+
+This node implements motion planning via quntic polynoms.
+
+Based on:
+Optimal Trajectory Generation for Dynamic Street Scenarios in a Frenet Frame
+Moritz Werling et el
+"""
+
+import rospy
+from car_msgs.msg import MotionPlanningTarget, CarState
+from car_core.motion_planner import MotionPlanner
+from geometry_msgs.msg import PoseStamped
+
+REPLAN_FREQ = 2          # Replanning frequency
+
+target = None
+car_state = None
+
+
+def target_callback(msg):
+    global target
+    target = msg
+
+
+def state_callback(msg):
+    global car_state
+    car_state = msg
+
+
+if __name__ == '__main__':
+    rospy.init_node('motion_planner_node')
+    rospy.loginfo("motion_planner_node started")
+
+    rospy.Subscriber('/next_target', MotionPlanningTarget, target_callback)
+    rospy.Subscriber('/car_state', CarState, state_callback)
+
+    planner = MotionPlanner()
+
+    rate = rospy.Rate(REPLAN_FREQ)
+    while not rospy.is_shutdown():
+        planner.plan(car_state, target)
+        rate.sleep()

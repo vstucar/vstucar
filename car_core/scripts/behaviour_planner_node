@@ -5,8 +5,8 @@
 # See the LICENSE file in the project root for more information.
 
 """
-behaviour_planner - perform design-choosen for maneuvers based on car position,
-enveronmet map and rools. It's hold line-choosing, turns, stops, intersections
+behaviour_planner performs design-choosen for maneuvers based on car position,
+environment map and rools. It's hold line-choosing, turns, stops, intersections
 crossing etc.
 
 It's provide target information to the motion_planner:
@@ -25,13 +25,13 @@ from car_core.behaviour_planner.behaviour_planner import BehaviourPlanner
 from car_msgs.msg import MotionPlanningTarget
 from car_core.common.rviz_helpers import FigureHelper
 
+REPLAN_FREQ = 1          # Replanning frequency
 WAYPOINTS_GAP = 2        # Distance between waypoints
 ENDS_GAP = 0.5           # Reference_path end margins, before current point, after next waypoint
 TARGET_SPEED = 1         # Target speed (for now)
-REPLAN_FREQ = 1          # Replanning frequency
 IS_VIS = True            # Display debug
 
-car_pose = None
+car_state = None
 global_path = None
 
 def path_callback(path):
@@ -39,7 +39,7 @@ def path_callback(path):
     global_path = path
 
 def pose_callback(pose):
-    global car_pose
+    global car_state
     car_pose = pose
 
 if __name__ == "__main__":
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     rate = rospy.Rate(REPLAN_FREQ)
     while not rospy.is_shutdown():
-        target = planner.plan(global_path, car_pose)
+        target = planner.plan(global_path, car_state)
         if target != None:
             target_pub.publish(target)
 
