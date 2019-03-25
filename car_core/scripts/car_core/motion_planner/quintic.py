@@ -1,3 +1,6 @@
+# This file is licensed under MIT license.
+# See the LICENSE file in the project root for more information.
+
 import numpy as np
 import numpy.polynomial.polynomial as npoly
 
@@ -39,5 +42,5 @@ def interpolate(coefs, x):
     return y, dy, ddy
 
 # Interpolate jerk (d3y/dx^3)
-def jerk(coefs, x):
+def inerpolate_jerk(coefs, x):
     return npoly.polyval(x, [6*coefs[2], 24*coefs[1], 60*coefs[0]])

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #coding=utf-8
 
 # This file is licensed under MIT license.
@@ -15,27 +14,43 @@ from trajectory import Trajectory1D, Trajectory2D
 import quintic
 
 ROAD_WIDTH = 3.5*2          # Ширина дороги - допустимой для езды области
-D_MIN   = -ROAD_WIDTH/2     # Миимальное значение поперечного положения
-D_MAX   =  ROAD_WIDTH/2     # Максимальное значение поперечного положения
-D_STEP  =  1                # Шаг переребора поперечных положений
+D_MIN = -ROAD_WIDTH/2       # Миимальное значение поперечного положения
+D_MAX = ROAD_WIDTH/2        # Максимальное значение поперечного положения
+D_STEP = 1                  # Шаг переребора поперечных положений
 
-S_DEV   =  10               # Максимальное отклонение продольного положения вперед/назад
+S_DEV = 10                  # Максимальное отклонение продольного положения вперед/назад
                             # от заданного. si = [s_target - S_DEV, s_target + S_DEV]
-S_STEP  =  3                # Шаг перебора продольных положений
+S_STEP = 3                  # Шаг перебора продольных положений
 
-T_DEV   =  0.5              # Максимальное отклонение времени от примерной оценки
+T_DEV = 0.5                 # Максимальное отклонение времени от примерной оценки
                             # ti = [(1-T_DEV)*t_estimate, (1+T_DEV)*t_estimate]
-T_CNT   =  4                # Количество переборов времени
+T_CNT = 4                   # Количество переборов времени
 
 S_CALC_STEP = 0.5           # Шаг интерполяции по продольному расстоянию (длине дуги)
 T_CALC_STEP = 0.2           # Шаг интерполяции по времени
 
+# Cost function coefficients
+K_LAT_J =  1
+K_LAT_T =  1
+K_LAT_D =  1
+K_LON_J =  1
+K_LON_T =  1
+K_LON_S =  1
+K_LON_DS = 1
+K_LON    = 1
+K_LAT    = 1
 
 class MotionPlanner:
     """
     Performs motion planning using quintic polynoms
     """
-    def __init__(self):
+    def __init__(self, map):
+        """
+        Creates motion planner
+        Args:
+            map: object which provides access to environment map
+        """
+        self.__map = map
         pass
 
     def plan(self, state, target):
@@ -54,7 +69,7 @@ class MotionPlanner:
 
         # Find closest point on path
         np_path = msgs_helpers.path_poses_to_array(target.path)
-        start_index = geom_helpers.get_closest_path_point(np_path, pos0)
+        # start_index = geom_helpers.get_closest_path_point(np_path, pos0)
 
         # Calc position and velocity in Frenet frame
         frenet_frame = FrenetFrame(0, np_path[0], np_path[1])
@@ -77,22 +92,12 @@ class MotionPlanner:
         for si in self.__arange(s_min, s_max, S_STEP):
 
             # Calc lateral trajectories [(si, d0), (si, d1), ...]
-            s_values = self.__arange(0, si, S_CALC_STEP)
-            lat_trajectories = []
-            for di in self.__arange(D_MIN, D_MAX, D_STEP):
-                lat_coefs = quintic.calc_coefs(D0, (di, 0, 0), si)
-                lat_trajectory = Trajectory1D(s_values, *quintic.interpolate(lat_coefs, s_values))
-
-                if self.__check_lat_constraints(lat_trajectory):
-                    lat_trajectories.append(lat_trajectory)
+            lat_trajectories = self.__calc_lat_trajectories(D0, D1, si)
 
             # Calc longitudinal trajectories [(si, t0), (si, t1), ...]
             for ti in np.linspace(t_min, t_max, T_CNT):
-                t_values = self.__arange(0, ti, T_CALC_STEP)
-                lon_coefs = quintic.calc_coefs(S0, (si, 0, 0), ti)
-                lon_trajectory = Trajectory1D(t_values, *quintic.interpolate(lon_coefs, t_values))
-
-                if not self.__check_lon_constraints(lon_trajectory):
+                lon_trajectory = self.__calc_lon_trajectory(S0, S1, si, ti)
+                if lon_trajectory is None:
                     continue
 
                 # Combine current lon-trajectory (si, ti) with set of lat-trajectories [(si, d0), (si, d1), ...],
@@ -103,7 +108,7 @@ class MotionPlanner:
                     if not self.__check_combined_constraints(combined_trajectory):
                         continue
 
-                    cost = self.__calc_cost(lon_trajectory, lat_trajectory)
+                    cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
                     if cost < min_cost:
                         global_trajectory = path_to_global(combined_trajectory, np_path)
                         if not self.__check_obstacles(global_trajectory):
@@ -136,15 +141,50 @@ class MotionPlanner:
     # uniformly accelerated motion
     # s0, s1 - current and target longitudinal states in
     #          Frenet Frame
-    def __calc_baseline_coefs(s0, s1):
+    def __calc_baseline_coefs(self, s0, s1):
         # v1 = v0 + a*t
         # s1 = s0 + v0*t + a*t^2/2
         t = (2 * (s1[0] - s0[0])) / (s0[1] + s1[1])
         a = (s1[1] - s0[1]) / t
         return t, np.array([0, 0, 0, a / 2, s0[1], 0])
 
-    def __arange(min, max, step):
+    def __arange(self, min, max, step):
         return np.arange(min, max + step, step)
+
+    # Calculate set lateral trajectories
+    def __calc_lat_trajectories(self, D0, D1, si):
+        s_values = self.__arange(0, si, S_CALC_STEP)
+        lat_trajectories = []
+        for di in self.__arange(D_MIN, D_MAX, D_STEP):
+            lat_coefs = quintic.calc_coefs(D0, (di, 0, 0), si)
+            lat_trajectory = Trajectory1D(s_values, *quintic.interpolate(lat_coefs, s_values))
+
+            if self.__check_lat_constraints(lat_trajectory):
+                # Calculate cost
+                jerk = quintic.inerpolate_jerk(lat_coefs, s_values)
+                lat_trajectory.cost = K_LAT_J * jerk + \
+                                      K_LAT_T * s_values[-1] + \
+                                      K_LAT_D * (lat_trajectory.y[-1] - D1[0]) ** 2
+                lat_trajectories.append(lat_trajectory)
+
+        return lat_trajectories
+
+    # Calculate a single longitudinal trajectory for given start and end conditions
+    def __calc_lon_trajectory(self, S0, S1, si, ti):
+        t_values = self.__arange(0, ti, T_CALC_STEP)
+        lon_coefs = quintic.calc_coefs(S0, (si, S1[1], 0), ti)
+        lon_trajectory = Trajectory1D(t_values, *quintic.interpolate(lon_coefs, t_values))
+
+        if not self.__check_lon_constraints(lon_trajectory):
+            return None
+
+        # Calculate cost
+        jerk = quintic.inerpolate_jerk(lon_coefs, t_values)
+        lon_trajectory.cost = K_LON_J * jerk + \
+                              K_LON_T * t_values[-1] + \
+                              K_LON_S * (lon_trajectory.y[-1] - S1[0]) ** 2 + \
+                              K_LON_DS * (lon_trajectory.dy[-1] - S1[1]) ** 2
+        return lon_trajectory
 
     def __check_lon_constraints(self, trajectory):
         # TODO:
@@ -158,10 +198,9 @@ class MotionPlanner:
         # TODO:
         return True
 
-    def __calc_cost(self, lon_trajectory, lat_trajectory):
-        # TODO:
-        return 0
-
     def __check_obstacles(self, trajectory):
         # TODO:
+        for t, pos in zip(trajectory.x, trajectory.pos):
+            if self.__map.is_obstacle(t, pos):
+                return False
         return True

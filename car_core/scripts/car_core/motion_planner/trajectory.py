@@ -4,6 +4,8 @@
 # See the LICENSE file in the project root for more information.
 
 import numpy as np
+import sys
+
 
 class Trajectory1D:
     """
@@ -19,15 +21,15 @@ class Trajectory1D:
         :param ddy: list if d2y/dx^2(x) points
         """
         
-        if len(x) != len(dy) or len(dy) != len(ddy) or len(ddy) != len(x):
+        if len(x) != len(y) or len(x) != len(dy):
             raise ValueError('Arrays should be same length')
         
         self.y = y
         self.dy = dy
         self.ddy = ddy
         self.x = x
-        self.valid = None
-    
+        self.cost = sys.float_info.max
+
     def len(self):
         return len(self.x)
 
