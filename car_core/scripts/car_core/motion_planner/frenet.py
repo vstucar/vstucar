@@ -1,9 +1,11 @@
+
 #coding=utf-8
 
 # This file is licensed under MIT license.
 # See the LICENSE file in the project root for more information.
 
 import numpy as np
+from trajectory import Trajectory2D
 
 MIN_POINT_DIFF = 0.05
 
@@ -64,26 +66,26 @@ class FrenetFrame:
         
     def point_to(self, point):
         """
-        Transofrm point in parent frame to the local frame
+        Transofrms point in parent frame to the local frame
         """
         return np.matmul(self.Rfw, point - self.Pwf) + self.S0
         
     def point_from(self, point):
         """
-        Transofrm point in local frame to the parent frame
+        Transofrms point in local frame to the parent frame
         """
         return np.matmul(self.Rwf, point - self.S0)+self.Pwf
     
     def vector_to(self, vector):
         """
-        Transform the vector in parent frame to the local frame
+        Transforms the vector in parent frame to the local frame
         (Position of the frame origin has no effect)
         """
         return np.matmul(self.Rfw, vector)
     
     def vector_from(self, vector):
         """
-        Transform the vector in local frame to the parent frame
+        Transforms the vector in local frame to the parent frame
         (Position of the frame origin has no effect)
         """
         return np.matmul(self.Rwf, vector)
@@ -94,26 +96,30 @@ def path_to_global(local_trajectory, trajectory):
     Convert local path in Frenet Frame to the path in global frame
     
     Args:
-        local_trajectory  - local trajectory in Frenet Frame (numpy array)
-        trajectory        - original (reference) trajectory. 
-                            local path will be "bended" along trajectory
+        local_trajectory (Trajectory2D): Local trajectory in Frenet Frame
+        trajectory (numpy array):        Original (reference) trajectory. 
+                                         local path will be "bended" along trajectory
+
+    Returns (Trajectory2D): Global trajectory in Cartesian frame
     """
-    global_trajectory = np.zeros((len(local_trajectory), 2))
+    #global_trajectory = np.zeros((len(local_trajectory), 2))
+    global_pos = np.zeros((len(local_trajectory.pos), 2))
+    global_vel = np.zeros((len(local_trajectory.pos), 2))
+    global_acc = np.zeros((len(local_trajectory.pos), 2))
+
     trajectory_index = 0
     trajectory_s = 0
     
-    for i, point in enumerate(local_trajectory):
-        s = point[0]
-        
+    for i in len(local_trajectory.pos):
+
         # Find index of the point on curve with s (covered length)
         # more then S of the current point in frenet frame
         while True:
-
             if trajectory_index >= len(trajectory)-1:
-                return global_trajectory[:i]
+                return Trajectory2D(local_trajectory.t[:i], global_pos[:i], global_vel[:i], global_acc[:i])
 
-            segment_len =  np.linalg.norm(trajectory[trajectory_index+1] - trajectory[trajectory_index])
-            if trajectory_s + segment_len >= s:
+            segment_len =  np.linalg.norm(trajectory[trajectory_index+1] - trajectory.pos[trajectory_index])
+            if trajectory_s + segment_len >= local_trajectory.pos[0,0]:
                 break
 
             trajectory_s += segment_len
@@ -123,7 +129,9 @@ def path_to_global(local_trajectory, trajectory):
         p2 = trajectory[trajectory_index+1]                        
         
         frenet = FrenetFrame(trajectory_s, p1, p2)
-        p = frenet.point_from(point)        
-        global_trajectory[i] = frenet.point_from(point)
+        global_pos[i] = frenet.point_from(local_trajectory.pos[i])
+        global_vel[i] = frenet.vector_from(local_trajectory.dpos[i])
+        global_acc[i] = frenet.vector_from(local_trajectory.ddpos[i])
         
-    return global_trajectory
+    return Trajectory2D(local_trajectory.t[:i], global_pos[:i], global_vel[:i], global_acc[:i])
+

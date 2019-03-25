@@ -12,7 +12,7 @@ nav_msgs/Path path
 float32 position
 
 # Target linear speed
-float32 speed
+float32 linear_speed
 
 # Position and orientation of the target
 # It should be tangent with path
