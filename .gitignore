@@ -4,9 +4,6 @@ build/
 
 ### Common IDEs ###
 
-### Jupyter notebook ###
-.ipynb_checkpoints/
-
 ### Idea ###
 .idea/**
 
