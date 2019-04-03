@@ -1,3 +1,6 @@
+# This file is licensed under MIT license.
+# See the LICENSE file in the project root for more information.
+
 cmake_minimum_required(VERSION 2.8.3)
 project(car_core)
 
@@ -11,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   car_msgs
 )
+
+catkin_python_setup()
 
 catkin_package(
 #  INCLUDE_DIRS include

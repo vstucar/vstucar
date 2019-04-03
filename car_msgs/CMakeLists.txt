@@ -1,3 +1,6 @@
+# This file is licensed under MIT license.
+# See the LICENSE file in the project root for more information.
+
 cmake_minimum_required(VERSION 2.8.3)
 project(car_msgs)
 
@@ -9,9 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-)
+#add_message_files(
+#  FILES
+#)
 
 ## Generate services in the 'srv' folder
 # add_service_files(

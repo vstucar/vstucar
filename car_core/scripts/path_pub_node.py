@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# This file is licensed under MIT license.
+# See the LICENSE file in the project root for more information.
+
 # This node publish path from iFrund-compatible file
 
 import rospy
