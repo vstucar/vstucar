@@ -22,7 +22,7 @@ Moritz Werling et el
 
 import rospy
 from car_msgs.msg import MotionPlanningTarget, CarState
-from car_core.motion_planner import MotionPlanner
+from car_core.motion_planner.motion_planner import MotionPlanner
 from geometry_msgs.msg import PoseStamped
 
 REPLAN_FREQ = 2          # Replanning frequency

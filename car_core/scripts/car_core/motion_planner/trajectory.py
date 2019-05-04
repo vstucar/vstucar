@@ -13,25 +13,25 @@ class Trajectory1D:
     argument (time, covered arc length, etc)
         y(x), dy/dx(x), d2y/dx^2(x) 
     """
-    def __init__(self, x, y, dy, ddy):
+    def __init__(self, t, x, dx, ddx):
         """
-        :param x: list of x (argument) points
-        :param y: list of y(x) points
-        :param dy: list of dy/dx(x) points
-        :param ddy: list if d2y/dx^2(x) points
+        :param t: list of x (argument) points
+        :param x: list of y(x) points
+        :param dx: list of dy/dx(x) points
+        :param ddx: list if d2y/dx^2(x) points
         """
         
-        if len(x) != len(y) or len(x) != len(dy):
+        if len(t) != len(x) or len(t) != len(dx):
             raise ValueError('Arrays should be same length')
         
-        self.y = y
-        self.dy = dy
-        self.ddy = ddy
         self.x = x
+        self.dx = dx
+        self.ddx = ddx
+        self.t = t
         self.cost = sys.float_info.max
 
     def len(self):
-        return len(self.x)
+        return len(self.t)
 
 
 class Trajectory2D:
@@ -49,12 +49,12 @@ class Trajectory2D:
             lat (Trajectory1D): lateral trajectory
         Returns: Combined trajectory
         """
-        if len(lat.x) != len(lon.x):
+        if len(lat.t) != len(lon.t):
             raise ValueError('Arrays should be same length')
 
-        pos = np.vstack((lon.x, lat.y)).T          # 2D Position
-        dpos = np.vstack((lon.dx, lat.dy)).T       # 2D Velocity (dpos/dt)
-        ddpos = np.vstack((lon.ddx, lat.ddy)).T    # 2D Acceleration (d2pos/dt&^2)
+        pos = np.vstack((lon.x, lat.x)).T          # 2D Position
+        dpos = np.vstack((lon.dx, lat.dx)).T       # 2D Velocity (dpos/dt)
+        ddpos = np.vstack((lon.ddx, lat.ddx)).T    # 2D Acceleration (d2pos/dt&^2)
         return Trajectory2D(lon.t, pos, dpos, ddpos)
 
     def __init__(self, t, pos, dpos, ddpos):

@@ -109,8 +109,8 @@ def path_to_global(local_trajectory, trajectory):
 
     trajectory_index = 0
     trajectory_s = 0
-    
-    for i in len(local_trajectory.pos):
+
+    for i in range(len(local_trajectory.pos)):
 
         # Find index of the point on curve with s (covered length)
         # more then S of the current point in frenet frame
@@ -118,8 +118,8 @@ def path_to_global(local_trajectory, trajectory):
             if trajectory_index >= len(trajectory)-1:
                 return Trajectory2D(local_trajectory.t[:i], global_pos[:i], global_vel[:i], global_acc[:i])
 
-            segment_len =  np.linalg.norm(trajectory[trajectory_index+1] - trajectory.pos[trajectory_index])
-            if trajectory_s + segment_len >= local_trajectory.pos[0,0]:
+            segment_len =  np.linalg.norm(trajectory[trajectory_index+1] - trajectory[trajectory_index])
+            if trajectory_s + segment_len >= local_trajectory.pos[0, 0]:
                 break
 
             trajectory_s += segment_len
