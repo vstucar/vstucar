@@ -11,14 +11,16 @@ class Trajectory1D:
     """
     Store trajectory description: position, speed, acceleration of some 
     argument (time, covered arc length, etc)
-        y(x), dy/dx(x), d2y/dx^2(x) 
+        x(t), dx/dt(t), d2x/dt^2(t)
+
+        ok - temporary attribute, is the trajectory satisfy the constraints
     """
     def __init__(self, t, x, dx, ddx):
         """
-        :param t: list of x (argument) points
-        :param x: list of y(x) points
-        :param dx: list of dy/dx(x) points
-        :param ddx: list if d2y/dx^2(x) points
+        :param t: list of t (argument) points
+        :param x: list of x(t) points
+        :param dx: list of dx/dt(t) points
+        :param ddx: list if d2x/dt^2(t) points
         """
         
         if len(t) != len(x) or len(t) != len(dx):
@@ -29,6 +31,7 @@ class Trajectory1D:
         self.ddx = ddx
         self.t = t
         self.cost = sys.float_info.max
+        self.ok = True
 
     def len(self):
         return len(self.t)
@@ -38,6 +41,8 @@ class Trajectory2D:
     """
     Store both lon/lat or x/y trajectories
     (position, speed, acceleration) of time
+
+    ok - temporary attribute, is the trajectory satisfy the constraints
     """
 
     @staticmethod
@@ -55,9 +60,9 @@ class Trajectory2D:
         pos = np.vstack((lon.x, lat.x)).T          # 2D Position
         dpos = np.vstack((lon.dx, lat.dx)).T       # 2D Velocity (dpos/dt)
         ddpos = np.vstack((lon.ddx, lat.ddx)).T    # 2D Acceleration (d2pos/dt&^2)
-        return Trajectory2D(lon.t, pos, dpos, ddpos)
+        return Trajectory2D(lon.t, pos, dpos, ddpos, lon.ok and lat.ok)
 
-    def __init__(self, t, pos, dpos, ddpos):
+    def __init__(self, t, pos, dpos, ddpos, ok = True):
         """
         Creates Trajectory2D of raw data
         Args:
@@ -70,3 +75,4 @@ class Trajectory2D:
         self.pos = pos
         self.dpos = dpos
         self.ddpos = ddpos
+        self.ok = ok

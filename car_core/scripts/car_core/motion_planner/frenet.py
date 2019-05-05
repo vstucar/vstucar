@@ -133,5 +133,5 @@ def path_to_global(local_trajectory, trajectory):
         global_vel[i] = frenet.vector_from(local_trajectory.dpos[i])
         global_acc[i] = frenet.vector_from(local_trajectory.ddpos[i])
         
-    return Trajectory2D(local_trajectory.t[:i], global_pos[:i], global_vel[:i], global_acc[:i])
+    return Trajectory2D(local_trajectory.t[:i], global_pos[:i], global_vel[:i], global_acc[:i], ok=local_trajectory.ok)
 
