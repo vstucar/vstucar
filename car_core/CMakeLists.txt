@@ -36,6 +36,10 @@ include_directories(
 
 catkin_add_nosetests(tests/test_py_common.py)
 
-add_executable(motion_planner_cpp_base src/motion_planner/motion_planner_base.cpp)
+add_executable(motion_planner_cpp_base
+        src/motion_planner/motion_planner.cpp
+        src/motion_planner/motion_planner_base.cpp)
 target_link_libraries(motion_planner_cpp_base ${catkin_LIBRARIES}
                                               ${PYTHON_LIBRARIES})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -fopenmp")

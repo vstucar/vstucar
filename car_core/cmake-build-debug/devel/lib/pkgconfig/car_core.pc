@@ -1,8 +1,0 @@
-prefix=/home/garrus/ros/src/vstucar/car_core/cmake-build-debug/devel
-
-Name: car_core
-Description: Description of car_core
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/garrus/ros/src/vstucar/car_core/cmake-build-debug/devel/lib 
-Requires: 
