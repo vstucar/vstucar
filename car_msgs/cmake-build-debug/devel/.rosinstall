@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/garrus/ros/src/vstucar/car_msgs/cmake-build-debug/devel/setup.sh

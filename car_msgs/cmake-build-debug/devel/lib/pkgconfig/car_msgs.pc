@@ -1,0 +1,8 @@
+prefix=/home/garrus/ros/src/vstucar/car_msgs/cmake-build-debug/devel
+
+Name: car_msgs
+Description: Description of car_msgs
+Version: 0.0.0
+Cflags: -I/home/garrus/ros/src/vstucar/car_msgs/cmake-build-debug/devel/include
+Libs: -L/home/garrus/ros/src/vstucar/car_msgs/cmake-build-debug/devel/lib 
+Requires: message_runtime std_msgs geometry_msgs nav_msgs

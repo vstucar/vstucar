@@ -1,0 +1,6 @@
+set(car_core_SETUP_PY_VERSION "0.0.0")
+set(car_core_SETUP_PY_SCRIPTS "")
+set(car_core_SETUP_PY_PACKAGES "car_core")
+set(car_core_SETUP_PY_PACKAGE_DIRS "scripts/car_core")
+set(car_core_SETUP_PY_MODULES "")
+set(car_core_SETUP_PY_MODULE_DIRS "")

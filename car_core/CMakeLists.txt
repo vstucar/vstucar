@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   car_msgs
 )
+find_package(PythonLibs REQUIRED)
 
 catkin_python_setup()
 
@@ -27,9 +28,14 @@ catkin_package(
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${PYTHON_INCLUDE_DIRS}
 )
 
 # how to depend from messages
 # add_dependencies(target car_msgs_generate_messages_cpp)
 
 catkin_add_nosetests(tests/test_py_common.py)
+
+add_executable(motion_planner_cpp_base src/motion_planner/motion_planner_base.cpp)
+target_link_libraries(motion_planner_cpp_base ${catkin_LIBRARIES}
+                                              ${PYTHON_LIBRARIES})
