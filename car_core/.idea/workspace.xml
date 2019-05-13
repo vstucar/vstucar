@@ -2,58 +2,58 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="car_core" targetName="std_msgs_generate_messages_lisp" />
-      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="gtest_main" />
-      <config projectName="car_core" targetName="geometry_msgs_generate_messages_lisp" />
-      <config projectName="car_core" targetName="run_tests" />
-      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_py" />
-      <config projectName="car_core" targetName="tests" />
-      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="car_msgs_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="download_extra_data" />
-      <config projectName="car_core" targetName="motion_planner_cpp_base" />
-      <config projectName="car_core" targetName="_run_tests_car_core_nosetests" />
-      <config projectName="car_core" targetName="geometry_msgs_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="geometry_msgs_generate_messages_py" />
-      <config projectName="car_core" targetName="roscpp_generate_messages_eus" />
-      <config projectName="car_core" targetName="nav_msgs_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_eus" />
-      <config projectName="car_core" targetName="std_msgs_generate_messages_cpp" />
-      <config projectName="car_core" targetName="doxygen" />
-      <config projectName="car_core" targetName="roscpp_generate_messages_lisp" />
-      <config projectName="car_core" targetName="_run_tests_car_core_nosetests_tests.test_py_common.py" />
-      <config projectName="car_core" targetName="gmock_main" />
-      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_lisp" />
-      <config projectName="car_core" targetName="_run_tests_car_core" />
-      <config projectName="car_core" targetName="car_msgs_generate_messages_py" />
       <config projectName="car_core" targetName="roscpp_generate_messages_cpp" />
-      <config projectName="car_core" targetName="nav_msgs_generate_messages_cpp" />
       <config projectName="car_core" targetName="car_msgs_generate_messages_cpp" />
-      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_cpp" />
-      <config projectName="car_core" targetName="std_msgs_generate_messages_eus" />
-      <config projectName="car_core" targetName="nav_msgs_generate_messages_lisp" />
-      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_lisp" />
-      <config projectName="car_core" targetName="run_tests_car_core_nosetests_tests.test_py_common.py" />
-      <config projectName="car_core" targetName="clean_test_results_car_core" />
-      <config projectName="car_core" targetName="geometry_msgs_generate_messages_eus" />
-      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_cpp" />
-      <config projectName="car_core" targetName="run_tests_car_core_nosetests" />
-      <config projectName="car_core" targetName="roscpp_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="std_msgs_generate_messages_py" />
-      <config projectName="car_core" targetName="run_tests_car_core" />
-      <config projectName="car_core" targetName="nav_msgs_generate_messages_eus" />
+      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="geometry_msgs_generate_messages_nodejs" />
       <config projectName="car_core" targetName="car_msgs_generate_messages_eus" />
-      <config projectName="car_core" targetName="clean_test_results" />
+      <config projectName="car_core" targetName="run_tests" />
+      <config projectName="car_core" targetName="gtest_main" />
+      <config projectName="car_core" targetName="tests" />
+      <config projectName="car_core" targetName="roscpp_generate_messages_nodejs" />
       <config projectName="car_core" targetName="std_msgs_generate_messages_nodejs" />
-      <config projectName="car_core" targetName="geometry_msgs_generate_messages_cpp" />
+      <config projectName="car_core" targetName="clean_test_results" />
       <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_eus" />
-      <config projectName="car_core" targetName="car_msgs_generate_messages_lisp" />
-      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_py" />
-      <config projectName="car_core" targetName="roscpp_generate_messages_py" />
-      <config projectName="car_core" targetName="gmock" />
-      <config projectName="car_core" targetName="nav_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_lisp" />
+      <config projectName="car_core" targetName="run_tests_car_core_nosetests_tests.test_py_common.py" />
       <config projectName="car_core" targetName="gtest" />
+      <config projectName="car_core" targetName="car_msgs_generate_messages_lisp" />
+      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_nodejs" />
+      <config projectName="car_core" targetName="clean_test_results_car_core" />
+      <config projectName="car_core" targetName="run_tests_car_core_nosetests" />
+      <config projectName="car_core" targetName="nav_msgs_generate_messages_eus" />
+      <config projectName="car_core" targetName="roscpp_generate_messages_lisp" />
+      <config projectName="car_core" targetName="gmock_main" />
+      <config projectName="car_core" targetName="_run_tests_car_core_nosetests_tests.test_py_common.py" />
+      <config projectName="car_core" targetName="geometry_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="geometry_msgs_generate_messages_eus" />
+      <config projectName="car_core" targetName="nav_msgs_generate_messages_nodejs" />
+      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_nodejs" />
+      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_cpp" />
+      <config projectName="car_core" targetName="nav_msgs_generate_messages_lisp" />
+      <config projectName="car_core" targetName="gmock" />
+      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_lisp" />
+      <config projectName="car_core" targetName="download_extra_data" />
+      <config projectName="car_core" targetName="car_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="_run_tests_car_core" />
+      <config projectName="car_core" targetName="nav_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="geometry_msgs_generate_messages_cpp" />
+      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_cpp" />
+      <config projectName="car_core" targetName="nav_msgs_generate_messages_cpp" />
+      <config projectName="car_core" targetName="std_msgs_generate_messages_cpp" />
+      <config projectName="car_core" targetName="roscpp_generate_messages_eus" />
+      <config projectName="car_core" targetName="std_msgs_generate_messages_eus" />
+      <config projectName="car_core" targetName="car_msgs_generate_messages_nodejs" />
+      <config projectName="car_core" targetName="std_msgs_generate_messages_lisp" />
+      <config projectName="car_core" targetName="motion_planner_cpp_base" />
+      <config projectName="car_core" targetName="actionlib_msgs_generate_messages_eus" />
+      <config projectName="car_core" targetName="run_tests_car_core" />
+      <config projectName="car_core" targetName="rosgraph_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="geometry_msgs_generate_messages_lisp" />
+      <config projectName="car_core" targetName="_run_tests_car_core_nosetests" />
+      <config projectName="car_core" targetName="std_msgs_generate_messages_py" />
+      <config projectName="car_core" targetName="doxygen" />
+      <config projectName="car_core" targetName="roscpp_generate_messages_py" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -63,9 +63,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f68aee21-69a1-4e84-abca-7093616f418f" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/motion_planner/quintic.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/motion_planner/motion_planner.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/motion_planner/motion_planner.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/motion_planner/motion_planner_base.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/motion_planner/motion_planner_base.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/motion_planner/quintic.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/motion_planner/quintic.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/motion_planner/range.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/motion_planner/range.h" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -80,8 +81,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/motion_planner/motion_planner_base.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="155">
-              <caret line="140" column="44" lean-forward="true" selection-start-line="140" selection-start-column="44" selection-end-line="140" selection-end-column="44" />
+            <state relative-caret-position="426">
+              <caret line="145" lean-forward="true" selection-start-line="145" selection-end-line="145" />
               <folding>
                 <element signature="e#111#130#0" expanded="true" />
               </folding>
@@ -92,8 +93,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/motion_planner/motion_planner.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="19" column="21" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
+            <state relative-caret-position="555">
+              <caret line="133" column="60" selection-start-line="133" selection-start-column="60" selection-end-line="133" selection-end-column="60" />
               <folding>
                 <element signature="e#110#132#0" expanded="true" />
               </folding>
@@ -102,10 +103,28 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/scripts/motion_planner_test.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="30" column="48" selection-start-line="30" selection-start-column="48" selection-end-line="30" selection-end-column="48" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/motion_planner/dynarray.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="360">
+              <caret line="24" column="5" lean-forward="true" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/motion_planner/quintic.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="446">
-              <caret line="35" column="15" selection-start-line="35" selection-start-column="15" selection-end-line="35" selection-end-column="15" />
+            <state relative-caret-position="660">
+              <caret line="44" column="29" selection-start-line="44" selection-start-column="29" selection-end-line="44" selection-end-column="29" />
               <folding>
                 <element signature="e#166#182#0" expanded="true" />
               </folding>
@@ -114,32 +133,31 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-12">
-              <caret line="11" column="3" lean-forward="true" selection-start-line="11" selection-start-column="3" selection-end-line="11" selection-end-column="3" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/motion_planner/frenet.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1320">
-              <caret line="88" selection-start-line="88" selection-end-line="88" />
+            <state relative-caret-position="-5">
+              <caret line="53" column="4" lean-forward="true" selection-start-line="53" selection-start-column="4" selection-end-line="53" selection-end-column="4" />
               <folding>
                 <element signature="e#197#375#0" />
                 <element signature="e#197#758#0" />
                 <element signature="e#764#876#0" />
                 <element signature="e#764#982#0" />
                 <element signature="e#988#1100#0" />
-                <element signature="e#988#1208#0" />
                 <element signature="e#1214#1391#0" />
                 <element signature="e#1214#1487#0" />
                 <element signature="e#1493#1670#0" />
                 <element signature="e#1493#1768#0" />
                 <element signature="e#1774#2106#0" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15">
+              <caret line="11" column="3" selection-start-line="11" selection-start-column="3" selection-end-line="11" selection-end-column="3" />
             </state>
           </provider>
         </entry>
@@ -166,13 +184,17 @@
       <find>ti</find>
       <find>arange&lt;float&gt;(D_MIN, D_MAX, D_STEP)</find>
       <find>size</find>
-      <find>arange&lt;float&gt;(0, t, T_CALC_STEP)</find>
       <find>t_range</find>
+      <find>-&gt;</find>
+      <find>arange&lt;float&gt;(0, t, T_CALC_STEP)</find>
+      <find>range</find>
     </findStrings>
     <replaceStrings>
       <replace>mat2x2</replace>
       <replace>float</replace>
       <replace>t</replace>
+      <replace>.</replace>
+      <replace>time_range</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -184,11 +206,11 @@
         <option value="$PROJECT_DIR$/src/motion_planner/quintic/dynarray.h" />
         <option value="$PROJECT_DIR$/src/motion_planner/quintic/Quintic.cpp" />
         <option value="$PROJECT_DIR$/src/motion_planner/quintic/Quintic.h" />
-        <option value="$PROJECT_DIR$/src/motion_planner/range.h" />
         <option value="$PROJECT_DIR$/src/motion_planner/frenet.h" />
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
-        <option value="$PROJECT_DIR$/src/motion_planner/quintic.h" />
+        <option value="$PROJECT_DIR$/src/motion_planner/range.h" />
         <option value="$PROJECT_DIR$/src/motion_planner/motion_planner.h" />
+        <option value="$PROJECT_DIR$/src/motion_planner/quintic.h" />
         <option value="$PROJECT_DIR$/src/motion_planner/motion_planner_base.cpp" />
       </list>
     </option>
@@ -216,6 +238,27 @@
               <item name="car_core" type="b2602c69:ProjectViewProjectNode" />
               <item name="car_core" type="47feb1d3:ProjectViewModuleNode" />
               <item name="car_core" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="car_core" type="b2602c69:ProjectViewProjectNode" />
+              <item name="car_core" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="car_core" type="462c0819:PsiDirectoryNode" />
+              <item name="scripts" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="car_core" type="b2602c69:ProjectViewProjectNode" />
+              <item name="car_core" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="car_core" type="462c0819:PsiDirectoryNode" />
+              <item name="scripts" type="462c0819:PsiDirectoryNode" />
+              <item name="car_core" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="car_core" type="b2602c69:ProjectViewProjectNode" />
+              <item name="car_core" type="47feb1d3:ProjectViewModuleNode" />
+              <item name="car_core" type="462c0819:PsiDirectoryNode" />
+              <item name="scripts" type="462c0819:PsiDirectoryNode" />
+              <item name="car_core" type="462c0819:PsiDirectoryNode" />
+              <item name="motion_planner" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="car_core" type="b2602c69:ProjectViewProjectNode" />
@@ -604,11 +647,12 @@
       <workItem from="1557590961448" duration="2611000" />
       <workItem from="1557654168610" duration="8787000" />
       <workItem from="1557725155234" duration="3011000" />
+      <workItem from="1557766239311" duration="8224000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="50755000" />
+    <option name="totallyTimeSpent" value="58979000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -623,18 +667,18 @@
     <frame x="0" y="0" width="1920" height="1045" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2900641" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.29326922" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32918552" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.033936653" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.32126698" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.22850679" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39819005" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32918552" />
       <window_info anchor="bottom" id="Database Changes" order="7" />
-      <window_info anchor="bottom" id="Messages" order="8" sideWeight="0.49946582" weight="0.40837103" />
+      <window_info active="true" anchor="bottom" id="Messages" order="8" sideWeight="0.49946582" visible="true" weight="0.41289592" />
       <window_info anchor="bottom" id="Terminal" order="9" />
       <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5005342" side_tool="true" weight="0.35180995" />
       <window_info anchor="bottom" id="Version Control" order="11" />
@@ -703,23 +747,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/motion_planner/dynarray.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" selection-start-line="6" selection-end-line="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/motion_planner/range.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1215">
-          <caret line="81" column="49" selection-start-line="81" selection-start-column="49" selection-end-line="81" selection-end-column="49" />
-          <folding>
-            <element signature="e#1239#1248#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///usr/include/c++/5/bits/stl_pair.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1740">
@@ -727,26 +754,6 @@
           <folding>
             <element signature="e#3176#3198#0" expanded="true" />
             <element signature="e#4104#4211#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/motion_planner/frenet.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1320">
-          <caret line="88" selection-start-line="88" selection-end-line="88" />
-          <folding>
-            <element signature="e#197#375#0" />
-            <element signature="e#197#758#0" />
-            <element signature="e#764#876#0" />
-            <element signature="e#764#982#0" />
-            <element signature="e#988#1100#0" />
-            <element signature="e#988#1208#0" />
-            <element signature="e#1214#1391#0" />
-            <element signature="e#1214#1487#0" />
-            <element signature="e#1493#1670#0" />
-            <element signature="e#1493#1768#0" />
-            <element signature="e#1774#2106#0" />
           </folding>
         </state>
       </provider>
@@ -760,35 +767,78 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-12">
-          <caret line="11" column="3" lean-forward="true" selection-start-line="11" selection-start-column="3" selection-end-line="11" selection-end-column="3" />
+        <state relative-caret-position="15">
+          <caret line="11" column="3" selection-start-line="11" selection-start-column="3" selection-end-line="11" selection-end-column="3" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/motion_planner/quintic.h">
+    <entry file="file://$PROJECT_DIR$/src/motion_planner/frenet.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="446">
-          <caret line="35" column="15" selection-start-line="35" selection-start-column="15" selection-end-line="35" selection-end-column="15" />
+        <state relative-caret-position="-5">
+          <caret line="53" column="4" lean-forward="true" selection-start-line="53" selection-start-column="4" selection-end-line="53" selection-end-column="4" />
           <folding>
-            <element signature="e#166#182#0" expanded="true" />
+            <element signature="e#197#375#0" />
+            <element signature="e#197#758#0" />
+            <element signature="e#764#876#0" />
+            <element signature="e#764#982#0" />
+            <element signature="e#988#1100#0" />
+            <element signature="e#1214#1391#0" />
+            <element signature="e#1214#1487#0" />
+            <element signature="e#1493#1670#0" />
+            <element signature="e#1493#1768#0" />
+            <element signature="e#1774#2106#0" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/motion_planner_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="30" column="48" selection-start-line="30" selection-start-column="48" selection-end-line="30" selection-end-column="48" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/motion_planner/motion_planner.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="19" column="21" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
+        <state relative-caret-position="555">
+          <caret line="133" column="60" selection-start-line="133" selection-start-column="60" selection-end-line="133" selection-end-column="60" />
           <folding>
             <element signature="e#110#132#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/motion_planner/range.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="206">
+          <caret line="73" column="8" selection-start-line="73" selection-start-column="8" selection-end-line="73" selection-end-column="45" />
+          <folding>
+            <element signature="e#92#111#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/motion_planner/dynarray.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="24" column="5" lean-forward="true" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/motion_planner/quintic.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="660">
+          <caret line="44" column="29" selection-start-line="44" selection-start-column="29" selection-end-line="44" selection-end-column="29" />
+          <folding>
+            <element signature="e#166#182#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/motion_planner/motion_planner_base.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="155">
-          <caret line="140" column="44" lean-forward="true" selection-start-line="140" selection-start-column="44" selection-end-line="140" selection-end-column="44" />
+        <state relative-caret-position="426">
+          <caret line="145" lean-forward="true" selection-start-line="145" selection-end-line="145" />
           <folding>
             <element signature="e#111#130#0" expanded="true" />
           </folding>

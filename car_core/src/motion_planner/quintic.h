@@ -20,20 +20,31 @@ public:
         coefs[4] = s0[1];
         coefs[5] = s0[0];
     }
-    
-    float x(float t)
+
+    inline __attribute__((always_inline))
+    float x(float t) const
     {
         return coefs[0]*powf(t, 5) + coefs[1]*powf(t, 4) + coefs[2]*powf(t, 3) + coefs[3]*powf(t, 2) + coefs[4]*t + coefs[5];
     }
-    
-    float dx(float t)
+
+    inline __attribute__((always_inline))
+    float dx(float t) const
     {
         return 5*coefs[0]*powf(t, 4) + 4*coefs[1]*powf(t, 3) + 3*coefs[2]*powf(t, 2) + 2*coefs[3]*t + coefs[4];
     }
-    
-    float ddx(float t)
+
+
+    inline __attribute__((always_inline))
+    float ddx(float t) const
     {
         return 20*coefs[0]*powf(t, 3) + 12*coefs[1]*powf(t, 2) + 6*coefs[2]*t + 2*coefs[3];
+    }
+
+
+    inline __attribute__((always_inline))
+    float jerk(float t) const
+    {
+        return 60*coefs[0]*powf(t, 2) + 24 * coefs[1]*t + 6*coefs[2];
     }
     
 private:

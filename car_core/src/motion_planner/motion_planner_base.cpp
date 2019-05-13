@@ -16,11 +16,9 @@ using namespace std;
 namespace plt=matplotlibcpp;
 
 
-class MotionPlannerBase
-{
+class MotionPlannerBase {
 public:
-    void plan(CarState& state, MotionPlanningTarget& target)
-    {
+    void plan(CarState &state, MotionPlanningTarget &target) {
         // Calc current Cartesian position, Cartesian velocity, and orientation (yaw)
         auto pos0 = state.position;
         auto vel0 = state.speed;
@@ -40,8 +38,12 @@ public:
         float t_estimate = calc_baseline_time(S0, S1);
 
         // Calc bounds of longitudinal and ti_vec variations
-        float t_min = (1 - T_DEV) * t_estimate;
-        float t_max = (1 + T_DEV) * t_estimate;
+        float t_min = (1.0f - T_DEV) * t_estimate;
+        float t_max = (1.0f + T_DEV) * t_estimate;
+
+        cout << "t_estimate: " << t_estimate << endl;
+        cout << "t_min:      " << t_min << endl;
+        cout << "t_max:      " << t_max << endl;
 
         // Create trajectories buffers
         float min_cost = std::numeric_limits<float>::max();
@@ -50,11 +52,11 @@ public:
         auto d_range = arange<float>(D_MIN, D_MAX, D_STEP);
         size_t num_lat_trajectories = d_range.size();
 
-        Trajectory1D* lat_trajectories = new Trajectory1D[num_lat_trajectories];
-        for(int i = 0; i<num_lat_trajectories; i++)
+        Trajectory1D *lat_trajectories = new Trajectory1D[num_lat_trajectories];
+        for (int i = 0; i < num_lat_trajectories; i++)
             lat_trajectories[i].init(max_points_per_trajectory);
 
-        Trajectory1D* lon_trajectory = new Trajectory1D(max_points_per_trajectory);
+        Trajectory1D lon_trajectory(max_points_per_trajectory);
 
         //dynarray<glm::vec2> global_trajectory(max_points_per_trajectory);
         //dynarray<glm::vec2> optimal_trajectory(max_points_per_trajectory);
@@ -62,48 +64,49 @@ public:
         Trajectory2D optimal_trajectory(max_points_per_trajectory);
 
         // TODO: calc trajectories
-        for(auto ti: linspace<float>(t_min, t_max, T_CNT))
-        {
-            std::vector<float> t_vec;
-            for(auto t: arange<float>(0, ti.value, T_CALC_STEP))
-                t_vec.push_back(t.value);
+        for (auto ti: linspace<float>(t_min, t_max, T_CNT)) {
+            auto t_range = arange<float>(0, ti.value, T_CALC_STEP);
+            //auto t_vec = t_range.to_vector();
 
-            for(auto di: d_range)
-            {
-                calc_lat_trajectory(D0, glm::vec3(di.value, 0, 0), ti.value, &lat_trajectories[ti.index]);
-
-                std::vector<float> d_vec;
-                for(int i = 0; i<lat_trajectories[ti.index].size; i++)
-                    d_vec.push_back(lat_trajectories[ti.index].ddx[i]);
-                plt::plot(t_vec, d_vec);
+            cout << "Generate lat\n";
+            for (auto di: d_range) {
+                calc_lat_trajectory(D0, glm::vec3(di.value, 0, 0), ti.value, t_range, lat_trajectories[di.index]);
+                //auto d_vec = lat_trajectories[di.index].x_to_vec();
+                //plt::plot(t_vec, d_vec);
             }
 
-            /*for (auto si: arange<float>(S1[0] - S_DEV, S1[0] + S_DEV, S_STEP))
-            {
-                   calc_lon_trajectory(S0, glm::vec3(si.value, S1[1], 0), ti.value, lon_trajectory);
+            cout << "Lon + lat\n";
+            cout << S1[0] - S_DEV << " " << S1[0] + S_DEV << " " << S_STEP << endl;
+            for (auto si: arange<float>(S1[0] - S_DEV, S1[0] + S_DEV, S_STEP)) {
+                calc_lon_trajectory(S0, glm::vec3(si.value, S1[1], 0), ti.value, t_range, lon_trajectory);
+                auto s_vec = lon_trajectory.x_to_vec();
+                //plt::plot(t_vec, s_vec);
 
-                   for(size_t i = 0; i<num_lat_trajectories; i++)
-                   {
-                       float cost = K_LAT * lat_trajectories[i].cost + K_LON + lon_trajectory->cost;
-                       FrenetFrame::path_to_global(*lon_trajectory, lat_trajectories[i], target.path, global_trajectory);
-                       global_trajectory.cost = cost;
+                for (size_t i = 0; i < num_lat_trajectories; i++) {
+                    float cost = K_LAT * lat_trajectories[i].cost + K_LON + lon_trajectory.cost;
+                    FrenetFrame::path_to_global(lon_trajectory, lat_trajectories[i], target.path, global_trajectory);
+                    global_trajectory.cost = cost;
 
-                       if(global_trajectory.cost < optimal_trajectory.cost)
-                           std::swap(global_trajectory, optimal_trajectory);
-                   }
-            }*/
+                    auto d_vec = lat_trajectories[i].x_to_vec();
+                    plt::plot(s_vec, d_vec);
+
+                    if (global_trajectory.cost < optimal_trajectory.cost)
+                        std::swap(global_trajectory, optimal_trajectory);
+                }
+            }
         }
 
 
         delete[] lat_trajectories;
-        delete lon_trajectory;
+
         plt::show();
 
     }
 
-    void get_state_in_frenet_frame(const FrenetFrame& frame, const glm::vec2& pos, const glm::vec2& vel, const glm::vec2& acc,
-                                   glm::vec3& s, glm::vec3& d)
-    {
+
+    void get_state_in_frenet_frame(const FrenetFrame &frame, const glm::vec2 &pos, const glm::vec2 &vel,
+                                   const glm::vec2 &acc,
+                                   glm::vec3 &s, glm::vec3 &d) {
         auto pos_f = frame.point_to(pos);
         auto vel_f = frame.vector_to(vel);
         auto acc_f = frame.vector_to(acc);
@@ -111,63 +114,80 @@ public:
         d = glm::vec3(pos_f.y, vel_f.y, acc_f.y);
     }
 
-    float calc_baseline_time(const glm::vec3& s0, const glm::vec3& s1)
-    {
+    float calc_baseline_time(const glm::vec3 &s0, const glm::vec3 &s1) {
         return (2 * (s1[0] - s0[0])) / (s0[1] + s1[1]);
     }
 
-    void calc_lat_trajectory(const glm::vec3& D0, const glm::vec3& D1, float t, Trajectory1D* trajectory)
-    {
-        cout << D0[0] << " " << D0[1] << " " << D0[2] << endl;
-        cout << D1[0] << " " << D1[1] << " " << D1[2] << endl;
+    void calc_lat_trajectory(const glm::vec3 &D0, const glm::vec3 &D1, float t, const range<float> &time_range,
+                             Trajectory1D &trajectory) {
+        quintic coefs(D0, D1, t);
+
+        cout << "lat\n";
+        cout << "DO: " << D0[0] << " " << D0[1] << " " << D0[2] << endl;
+        cout << "D1: " << D1[0] << " " << D1[1] << " " << D1[2] << endl;
+        cout << "T:  " << t << ", N: " << time_range.size() << endl;
         cout << endl;
 
-        quintic coefs(D0, D1, t);
-        auto range = arange<float>(0, t, T_CALC_STEP);
+        for (auto ti: time_range)
+            trajectory.x[ti.index] = coefs.x(ti.value);
 
-        for(auto ti: range)
-            trajectory->x[ti.index] = coefs.x(ti.value);
-
-        for(auto ti: range)
-            trajectory->dx[ti.index] = coefs.dx(ti.value);
+        for (auto ti: time_range)
+            trajectory.dx[ti.index] = coefs.dx(ti.value);
 
         bool ddx_constraints_ok = true;
-        for(auto ti: range)
-        {
-            trajectory->ddx[ti.index] = coefs.ddx(ti.value);
-            ddx_constraints_ok &= fabs(trajectory->ddx[ti.index]) <= MAX_LAT_ACC;
+        for (auto ti: time_range) {
+            trajectory.ddx[ti.index] = coefs.ddx(ti.value);
+            ddx_constraints_ok &= fabs(trajectory.ddx[ti.index]) <= MAX_LAT_ACC;
         }
 
-        trajectory->ok = ddx_constraints_ok;
-        trajectory->cost = 0;
-        trajectory->size = range.size();
+        trajectory.cost = K_LAT_J * integrate_jerk(coefs, time_range) +
+                          K_LAT_T * t +
+                          K_LAT_D * powf(trajectory.x[trajectory.size-1] - D1[0], 2);
+
+        trajectory.ok = ddx_constraints_ok;
+        trajectory.size = time_range.size();
     }
 
-    void calc_lon_trajectory(const glm::vec3& S0, const glm::vec3& S1, float t, Trajectory1D* trajectory)
-    {
+    void calc_lon_trajectory(const glm::vec3 &S0, const glm::vec3 &S1, float t, const range<float> &time_range,
+                             Trajectory1D &trajectory) {
         quintic coefs(S0, S1, t);
-        auto range = arange<float>(0, t, T_CALC_STEP);
 
-        for(auto ti: range)
-            trajectory->x[ti.index] = coefs.x(ti.value);
+        cout << "lon\n";
+        cout << "SO: " << S0[0] << " " << S0[1] << " " << S0[2] << endl;
+        cout << "S1: " << S1[0] << " " << S1[1] << " " << S1[2] << endl;
+        cout << "T:  " << t << ", N: " << time_range.size() << endl;
+        cout << endl;
+
+        for (auto ti: time_range)
+            trajectory.x[ti.index] = coefs.x(ti.value);
 
         bool dx_constraints_ok = true;
-        for(auto ti: range)
-        {
-            trajectory->dx[ti.index] = coefs.dx(ti.value);
-            dx_constraints_ok &= trajectory->dx[ti.index] <= MAX_LON_SPEED && trajectory->dx[ti.index] >= MIN_LON_SPEED;
+        for (auto ti: time_range) {
+            trajectory.dx[ti.index] = coefs.dx(ti.value);
+            dx_constraints_ok &= trajectory.dx[ti.index] <= MAX_LON_SPEED && trajectory.dx[ti.index] >= MIN_LON_SPEED;
         }
 
         bool ddx_constraints_ok = true;
-        for(auto ti: range)
-        {
-            trajectory->ddx[ti.index] = coefs.dx(ti.value);
-            ddx_constraints_ok &= fabs(trajectory->ddx[ti.index]) <= MAX_LAT_ACC;
+        for (auto ti: time_range) {
+            trajectory.ddx[ti.index] = coefs.dx(ti.value);
+            ddx_constraints_ok &= fabs(trajectory.ddx[ti.index]) <= MAX_LAT_ACC;
         }
 
-        trajectory->ok = ddx_constraints_ok && dx_constraints_ok;
-        trajectory->cost = 0;
-        trajectory->size = range.size();
+        trajectory.cost = K_LON_J * integrate_jerk(coefs, time_range) +
+                          K_LON_T * t +
+                          K_LON_S * powf(trajectory.x[trajectory.size-1] - S1[0], 2) +
+                          K_LON_DS * powf(trajectory.dx[trajectory.size-1] - S1[1], 2);
+
+        trajectory.ok = ddx_constraints_ok && dx_constraints_ok;
+        trajectory.size = time_range.size();
+    }
+
+    float integrate_jerk(const quintic& coefs, const range<float>& time_range)
+    {
+        float jerk_int = 0;
+        for (auto ti: time_range)
+            jerk_int += powf(coefs.jerk(ti.value), 2);
+        return jerk_int * T_CALC_STEP;
     }
 
 private:
@@ -178,7 +198,7 @@ int main()
 {
     const int N_POINTS = 10;
     const float SPEED = 8;
-    const float TARGET_X = 10;
+    const float TARGET_X = 15;
     const float TARGET_SPEED = 0;
 
     CarState cur_state{{0, 0}, {SPEED, 0}, 0};

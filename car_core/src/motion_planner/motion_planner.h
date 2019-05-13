@@ -7,22 +7,23 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <vector>
 
 const float ROAD_WIDTH = 3.5*2;         // Ширина дороги - допустимой для езды области
 const float D_MIN = -ROAD_WIDTH/2;      // Миимальное значение поперечного положения
 const float D_MAX = ROAD_WIDTH/2;       // Максимальное значение поперечного положения
 const float D_STEP = 1;                 // Шаг переребора поперечных положений
 
-const float S_DEV = 0;                  // Максимальное отклонение продольного положения вперед/назад от заданного
+const float S_DEV = 5;                  // Максимальное отклонение продольного положения вперед/назад от заданного
                                         // si = [s_target - S_DEV, s_target + S_DEV]
 const float S_STEP = 3;                 // Шаг перебора продольных положений
 
-const float T_DEV = 1.0;                // Максимальное отклонение времени от примерной оценки
+const float T_DEV = 0.5;                // Максимальное отклонение времени от примерной оценки
                                         // ti = [(1-T_DEV)*t_estimate, (1+T_DEV)*t_estimate]
 const float T_CNT = 4;                  // Количество переборов времени
 
 // Параметры расчета
-const float T_CALC_STEP = 0.1;          // Шаг интерполяции по времени
+const float T_CALC_STEP = 0.05;         // Шаг интерполяции по времени
 
 // Параметры ограничений
 const float MAX_LON_SPEED = 12;         // Maximum longitudinal speed
@@ -127,6 +128,11 @@ struct Trajectory
             size = 0;
         }
     }
+
+    std::vector<T> x_to_vec() { return std::vector<T>(x, x+size); }
+    std::vector<T> dx_to_vec() { return std::vector<T>(dx, dx+size); }
+    std::vector<T> ddx_to_vec() { return std::vector<T>(ddx, ddx+size); }
+
 
     float cost = 0;
     bool ok = false;

@@ -6,6 +6,7 @@
 #define CAR_CORE_RANGE_H
 
 #include <iostream>
+#include <vector>
 using namespace std;
 
 template <class T>
@@ -88,12 +89,12 @@ public:
         const T _step;
     };
 
-    const iterator begin()
+    const iterator begin() const
     {
         return iterator(_start, _step, 0);
     }
 
-    const iterator end()
+    const iterator end() const
     {
         return iterator(_start, _step, _cnt);
     }
@@ -106,6 +107,16 @@ public:
         return _cnt;
     }
 
+
+    std::vector<T> to_vector() const
+    {
+        std::vector<T> array(size());
+        for(auto it: *this)
+            array[it.index] = it.value;
+
+        // Do copy?
+        return array;
+    }
 
 private:
     range(const T start, const T step, size_t cnt) :
