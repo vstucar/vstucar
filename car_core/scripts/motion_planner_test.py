@@ -24,7 +24,7 @@ planner = MotionPlanner(fake_map)
 
 vel0 = 15
 vel1 = 5
-dist = 100
+dist = 30
 n_points = 10
 
 cur_state = CarState(get_pose(0, 0, 0), 15)  # Point, linear speed,

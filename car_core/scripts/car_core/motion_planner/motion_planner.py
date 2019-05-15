@@ -20,12 +20,10 @@ D_MIN = -5                  # Миимальное значение попере
 D_MAX = 5                   # Максимальное значение поперечного положения
 D_STEP = 2                  # Шаг переребора поперечных положений
 
-S_DEV = 0.3                 # Максимальное отклонение продольного положения вперед/назад от заданного, в долях
-                            # si = [(1-S_DEV)*s1, (1+S_DEV)*s1]
-S_STEP = 5                  # Шаг перебора продольных положений
+S_DEV = 0                  # Максимальное отклонение продольного положения вперед/назад от заданного
+S_STEP = 3                  # Шаг перебора продольных положений
 
-V_DEV = 0.0                 # Максимальное отклонение продольной скорости в большую/меньшую сторону от заданного, в долях
-                            # vi = [(1-V_DEV)*v1, (1+V_DEV)*v_estimate]
+V_DEV = 0.0                 # Максимальное отклонение продольной скорости в большую/меньшую сторону от заданного
 V_STEP = 1                  # Шаг перебора продольных скоростей
 
 T_DEV = 0.0                 # Максимальное отклонение времени от примерной оценки, в долях
@@ -33,7 +31,7 @@ T_DEV = 0.0                 # Максимальное отклонение вр
 T_STEP = 1                  # Шаг перебора времени
 
 # Параметры расчета
-T_CALC_STEP = 0.05          # Шаг интерполяции по времени
+T_CALC_STEP = 0.01          # Шаг интерполяции по времени
 
 # Параметры ограничений
 MAX_LON_SPEED = 22          # Maximum longitudinal speed
@@ -93,29 +91,46 @@ class MotionPlanner:
         S0, D0 = self.__get_state_in_frenet_frame(frenet_frame, pos0, vel0, [0, 0])  # Initial lon & lat states
         S1, D1 = self.__get_state_in_frenet_frame(frenet_frame, pos1, vel1, [0, 0])  # Target lon & lat states
 
-        # Estimate maneuver time
         ax = self.__init_ploting(S0, S1, D0, D1)
         num_lat_trajectories = 0
         num_lon_trajectories = 0
         num_glob_trajectoris = 0
 
-        for vi in self.__arange((1-V_DEV)*S1[1], (1+V_DEV)*S1[1], V_STEP):
-            for si in self.__arange((1-S_DEV)*S1[0], (1+S_DEV)*S1[0], S_STEP):
+        cnt = 3
+        s_step = (S1 - S0)/cnt
+        self.plan_stage(0.0, S0, S0+s_step, s_step, S1, D0, D1, np_path, ax)
+
+        plt.show()
+
+        print('Lon trajectories:  {}'.format(num_lon_trajectories))
+        print('Lat trajectories:  {}'.format(num_lat_trajectories))
+        print('Glob trajectories: {}'.format(num_glob_trajectoris))
+
+    def plan_stage(self, t0, S0, S1, s_step, s_end, D0, D1, np_path, ax):
+        num_lat_trajectories = 0
+        num_lon_trajectories = 0
+        num_glob_trajectoris = 0
+
+        self.plot_lat_dot(ax, t0, D0)
+        self.plot_lon_dot(ax, t0, S0)
+
+        for vi in self.__arange(S1[1]-V_DEV, S1[1]+V_DEV, V_STEP):
+            for si in self.__arange(S1[0]-S_DEV, S1[0]+S_DEV, S_STEP):
                 S1i = (si, vi, S1[2])
 
-                t_estimate, _ = self.__calc_baseline_coefs(S0, S1i)
+                t_estimate = self.__calc_baseline_coefs(S0, S1)
                 for ti in self.__arange((1 - T_DEV) * t_estimate, (1 + T_DEV) * t_estimate, T_STEP):
                     lon_trajectory = self.__calc_lon_trajectory(S0, S1i, ti)
                     num_lon_trajectories+=1
 
-                    self.plot_lon(ax, lon_trajectory)
+                    self.plot_lon(ax, lon_trajectory, t0)
 
                     for di in self.__arange(D_MIN, D_MAX, D_STEP):
                         D1i = (di, D1[1], D1[2])
                         lat_trajectory = self.__calc_lat_trajectory(D0, D1i, ti)
                         num_lat_trajectories+=1
 
-                        self.plot_lat(ax, lat_trajectory)
+                        self.plot_lat(ax, lat_trajectory, t0)
 
                         combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory)
                         num_glob_trajectoris+=1
@@ -124,11 +139,13 @@ class MotionPlanner:
                         global_trajectory = path_to_global(combined_trajectory, np_path)
                         self.plot_glob(ax, global_trajectory)
 
-        plt.show()
-
-        print('Lon trajectories:  {}'.format(num_lon_trajectories))
-        print('Lat trajectories:  {}'.format(num_lat_trajectories))
-        print('Glob trajectories: {}'.format(num_glob_trajectoris))
+                        S0_next = np.array([lon_trajectory.x[-1], lon_trajectory.dx[-1], lon_trajectory.ddx[-1]])
+                        D0_next = np.array([lat_trajectory.x[-1], lat_trajectory.dx[-1], lat_trajectory.ddx[-1]])
+                        t0_next = t0+lon_trajectory.t[-1]
+                        S1_next = S1 + s_step
+                        if S1_next[0] <= s_end[0]:
+                            self.plan_stage(t0_next, S0_next, S1_next, s_step, s_end, D0_next, D1, np_path, ax)
+                            
 
     def gen_hsv(self, cnt):
         hsv = np.full((cnt, 3), 1.0)
@@ -140,19 +157,29 @@ class MotionPlanner:
             color = color if color is not None else ('#ff0000' if global_trajectory.ok else '#aaaaaa')
             ax[3][0].plot(global_trajectory.pos[:, 0], global_trajectory.pos[:, 1], color=color, alpha=0.5)
 
-    def plot_lat(self, ax, lat_trajectory, color=None):
+    def plot_lat(self, ax, lat_trajectory, t0=0, color=None):
         if IS_PLOT:
             color = color if color is not None else ('#ff0000' if lat_trajectory.ok else '#aaaaaa')
-            ax[0][0].plot(lat_trajectory.t, lat_trajectory.x, color=color)
-            ax[1][0].plot(lat_trajectory.t, lat_trajectory.dx, color=color)
-            ax[2][0].plot(lat_trajectory.t, lat_trajectory.ddx, color=color)
+            ax[0][0].plot(t0 + lat_trajectory.t, lat_trajectory.x, color=color)
+            ax[1][0].plot(t0 + lat_trajectory.t, lat_trajectory.dx, color=color)
+            ax[2][0].plot(t0 + lat_trajectory.t, lat_trajectory.ddx, color=color)
 
-    def plot_lon(self, ax, lon_trajectory, color=None):
+    def plot_lon(self, ax, lon_trajectory, t0=0, color=None):
         if IS_PLOT:
             color = color if color is not None else ('#ff0000' if lon_trajectory.ok else '#aaaaaa')
-            ax[0][1].plot(lon_trajectory.t, lon_trajectory.x, color=color)
-            ax[1][1].plot(lon_trajectory.t, lon_trajectory.dx, color=color)
-            ax[2][1].plot(lon_trajectory.t, lon_trajectory.ddx, color=color)
+            ax[0][1].plot(t0 + lon_trajectory.t, lon_trajectory.x, color=color)
+            ax[1][1].plot(t0 + lon_trajectory.t, lon_trajectory.dx, color=color)
+            ax[2][1].plot(t0 + lon_trajectory.t, lon_trajectory.ddx, color=color)
+
+    def plot_lat_dot(self, ax, t0, dot):
+        ax[0][0].plot([t0], [dot[0]], 'ob')
+        ax[1][0].plot([t0], [dot[1]], 'ob')
+        ax[2][0].plot([t0], [dot[2]], 'ob')
+
+    def plot_lon_dot(self, ax, t0, dot):
+        ax[0][1].plot([t0], [dot[0]], 'ob')
+        ax[1][1].plot([t0], [dot[1]], 'ob')
+        ax[2][1].plot([t0], [dot[2]], 'ob')
 
     # Get the car's pos, vel, yaw from the car_msgs/CarState
     # pos - position (vector)
@@ -173,8 +200,8 @@ class MotionPlanner:
         pos_f = frame.point_to(pos)
         vel_f = frame.vector_to(vel)
         acc_f = frame.vector_to(acc)
-        s = (pos_f[0], vel_f[0], acc_f[0])
-        d = (pos_f[1], vel_f[1], acc_f[1])
+        s = np.array([pos_f[0], vel_f[0], acc_f[0]])
+        d = np.array([pos_f[1], vel_f[1], acc_f[1]])
         return s, d
 
     # Calculate the maneuver time estimation based on
@@ -184,9 +211,9 @@ class MotionPlanner:
     def __calc_baseline_coefs(self, s0, s1):
         # v1 = v0 + a*t
         # s1 = s0 + v0*t + a*t^2/2
-        t = (2 * (s1[0] - s0[0])) / (s0[1] + s1[1])
-        a = (s1[1] - s0[1]) / t
-        return t, np.array([0, 0, 0, a / 2, s0[1], 0])
+        return (2 * (s1[0] - s0[0])) / (s0[1] + s1[1])
+        #a = (s1[1] - s0[1]) / t
+        #return t, np.array([0, 0, 0, a / 2, s0[1], 0])
 
     # arange with closed interval
     # if end border won't include in arange, step will be
@@ -203,39 +230,39 @@ class MotionPlanner:
             return np.linspace(start, stop, cnt)
 
     # Calculate set lateral trajectories
-    def __calc_lat_trajectory(self, D0, D1, t):
+    def __calc_lat_trajectory(self, D0, D1, t1):
         #print('lat')
         #print('D0: {}'.format(D0))
         #print('D1: {}'.format(D0))
         #print('t:  {}'.format(t))
 
-        t_values = np.arange(0, t, T_CALC_STEP)
-        coefs = quintic.calc_coefs(D0, D1, t)
+        t_values = np.arange(0, t1, T_CALC_STEP)
+        coefs = quintic.calc_coefs(D0, D1, t1)
         trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
         # Calculate cost
         jerk = quintic.inerpolate_jerk(coefs, t_values)
         trajectory.cost = K_LAT_J * self.__integrate_jerk(jerk) + \
-                              K_LAT_T * t + \
+                              K_LAT_T * t1 + \
                               K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
         trajectory.ok = self.__check_lat_constraints(trajectory)
         return trajectory
 
     # Calculate a single longitudinal trajectory for given start and end conditions
-    def __calc_lon_trajectory(self, S0, S1, t):
+    def __calc_lon_trajectory(self, S0, S1, t1):
         #print('lon')
         #print('S0: {}'.format(S0))
         #print('S1: {}'.format(S0))
         #print('t:  {}'.format(t))
 
-        t_values = np.arange(0, t, T_CALC_STEP)
-        coefs = quintic.calc_coefs(S0, S1, t)
+        t_values = np.arange(0, t1, T_CALC_STEP)
+        coefs = quintic.calc_coefs(S0, S1, t1)
         trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
         # Calculate cost
         jerk = quintic.inerpolate_jerk(coefs, t_values)
         trajectory.cost = K_LON_J * self.__integrate_jerk(jerk) + \
-                              K_LON_T * t + \
+                              K_LON_T * t1 + \
                               K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
                               K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
         trajectory.ok = self.__check_lon_constraints(trajectory)
