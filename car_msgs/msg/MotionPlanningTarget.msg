@@ -8,12 +8,9 @@ std_msgs/Header header
 # Path motion should be planned for
 nav_msgs/Path path
 
-# Target position along the @path
-float32 position
-
-# Target linear speed
-float32 linear_speed
-
 # Position and orientation of the target
 # It should be tangent with path
 geometry_msgs/Pose pose
+
+# Target linear speed
+float32 linear_speed

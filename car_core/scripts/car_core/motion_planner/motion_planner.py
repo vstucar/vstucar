@@ -13,30 +13,34 @@ from frenet import FrenetFrame, path_to_global
 from trajectory import Trajectory1D, Trajectory2D
 import quintic
 import matplotlib.pyplot as plt
+from matplotlib.colors import hsv_to_rgb
 
 # Параметры перебора вариантов
-ROAD_WIDTH = 3.5*2          # Ширина дороги - допустимой для езды области
-D_MIN = 5 #-ROAD_WIDTH/2       # Миимальное значение поперечного положения
-D_MAX = 5 #ROAD_WIDTH/2        # Максимальное значение поперечного положения
-D_STEP = 1                  # Шаг переребора поперечных положений
+D_MIN = -5                  # Миимальное значение поперечного положения
+D_MAX = 5                   # Максимальное значение поперечного положения
+D_STEP = 2                  # Шаг переребора поперечных положений
 
-S_DEV = 0                   # Максимальное отклонение продольного положения вперед/назад от заданного
-                            # si = [s_target - S_DEV, s_target + S_DEV]
-S_STEP = 3                  # Шаг перебора продольных положений
+S_DEV = 0.3                 # Максимальное отклонение продольного положения вперед/назад от заданного, в долях
+                            # si = [(1-S_DEV)*s1, (1+S_DEV)*s1]
+S_STEP = 5                  # Шаг перебора продольных положений
 
-T_DEV = 0.0                 # Максимальное отклонение времени от примерной оценки
+V_DEV = 0.0                 # Максимальное отклонение продольной скорости в большую/меньшую сторону от заданного, в долях
+                            # vi = [(1-V_DEV)*v1, (1+V_DEV)*v_estimate]
+V_STEP = 1                  # Шаг перебора продольных скоростей
+
+T_DEV = 0.0                 # Максимальное отклонение времени от примерной оценки, в долях
                             # ti = [(1-T_DEV)*t_estimate, (1+T_DEV)*t_estimate]
-T_CNT = 4                   # Количество переборов времени
+T_STEP = 1                  # Шаг перебора времени
 
 # Параметры расчета
-T_CALC_STEP = 0.1           # Шаг интерполяции по времени
+T_CALC_STEP = 0.05          # Шаг интерполяции по времени
 
 # Параметры ограничений
-MAX_LON_SPEED = 12          # Maximum longitudinal speed
+MAX_LON_SPEED = 22          # Maximum longitudinal speed
 MIN_LON_SPEED = 0           # Minimum longitudinal speed (0, to remove strange results)
-MAX_LON_ACC = 5             # Maximum longitudinal acceleration
-MIN_LON_DEACC = -5          # Minimum longitudinal deacceleration (breaking)
-MAX_LAT_ACC = 1             # Maximum lateral acceleration
+MAX_LON_ACC = 1.5           # Maximum longitudinal acceleration
+MIN_LON_DEACC = -1.5        # Minimum longitudinal deacceleration (breaking)
+MAX_LAT_ACC = 0.1             # Maximum lateral acceleration
 MIN_CURV_RADIUS = 0         # Minimum curvature radius
 
 # Cost function coefficients
@@ -49,6 +53,8 @@ K_LON_S =  1
 K_LON_DS = 1
 K_LON    = 1
 K_LAT    = 1
+
+IS_PLOT = True
 
 class MotionPlanner:
     """
@@ -88,52 +94,65 @@ class MotionPlanner:
         S1, D1 = self.__get_state_in_frenet_frame(frenet_frame, pos1, vel1, [0, 0])  # Target lon & lat states
 
         # Estimate maneuver time
-        t_estimate, _ = self.__calc_baseline_coefs(S0, S1)
-
-        # Calc bounds of longitudinal and time variations
-        t_min = (1 - T_DEV) * t_estimate
-        t_max = (1 + T_DEV) * t_estimate
-
-        optimal_trajectory = None
-        min_cost = sys.float_info.max
-
         ax = self.__init_ploting(S0, S1, D0, D1)
+        num_lat_trajectories = 0
+        num_lon_trajectories = 0
+        num_glob_trajectoris = 0
 
-        # Calculate trajectories
-        for ti in np.linspace(t_min, t_max, T_CNT):
-            t_values = np.arange(0, ti, T_CALC_STEP)
-            lat_trajectories = self.__calc_lat_trajectories(D0, D1, t_values)
+        for vi in self.__arange((1-V_DEV)*S1[1], (1+V_DEV)*S1[1], V_STEP):
+            for si in self.__arange((1-S_DEV)*S1[0], (1+S_DEV)*S1[0], S_STEP):
+                S1i = (si, vi, S1[2])
 
-            for lat_trajectory in lat_trajectories:
-                color = '#ff0000' if lat_trajectory.ok else '#aaaaaa'
-                ax[0][0].plot(lat_trajectory.t, lat_trajectory.x, color=color)
-                ax[1][0].plot(lat_trajectory.t, lat_trajectory.dx, color=color)
-                ax[2][0].plot(lat_trajectory.t, lat_trajectory.ddx, color=color)
+                t_estimate, _ = self.__calc_baseline_coefs(S0, S1i)
+                for ti in self.__arange((1 - T_DEV) * t_estimate, (1 + T_DEV) * t_estimate, T_STEP):
+                    lon_trajectory = self.__calc_lon_trajectory(S0, S1i, ti)
+                    num_lon_trajectories+=1
 
-            for lon_trajectory in self.__calc_lon_trajectories(S0, S1, t_values):
-                color = '#ff0000' if lon_trajectory.ok else '#aaaaaa'
-                ax[0][1].plot(lon_trajectory.t, lon_trajectory.x, color=color)
-                ax[1][1].plot(lon_trajectory.t, lon_trajectory.dx, color=color)
-                ax[2][1].plot(lon_trajectory.t, lon_trajectory.ddx, color=color)
+                    self.plot_lon(ax, lon_trajectory)
 
+                    for di in self.__arange(D_MIN, D_MAX, D_STEP):
+                        D1i = (di, D1[1], D1[2])
+                        lat_trajectory = self.__calc_lat_trajectory(D0, D1i, ti)
+                        num_lat_trajectories+=1
 
-                # Combine current lon-trajectory (ti, si) with set of lat-trajectories [(ti, d0), (ti, d1), ...],
-                for lat_trajectory in lat_trajectories:
-                    combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory)
-                    #combined_trajectory.ok = self.__check_combined_constraints(combined_trajectory)
+                        self.plot_lat(ax, lat_trajectory)
 
-                    cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
-                    #if cost < min_cost:
-                    global_trajectory = path_to_global(combined_trajectory, np_path)
-                    color = '#ff0000' if global_trajectory.ok else '#aaaaaa'
-                    ax[3][0].plot(global_trajectory.pos[:, 0], global_trajectory.pos[:, 1], color=color, alpha=0.5)
-                    #if not self.__check_obstacles(global_trajectory):
-                    #    min_cost = cost
-                    #    optimal_trajectory = global_trajectory
+                        combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory)
+                        num_glob_trajectoris+=1
 
+                        cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
+                        global_trajectory = path_to_global(combined_trajectory, np_path)
+                        self.plot_glob(ax, global_trajectory)
 
         plt.show()
-        return optimal_trajectory
+
+        print('Lon trajectories:  {}'.format(num_lon_trajectories))
+        print('Lat trajectories:  {}'.format(num_lat_trajectories))
+        print('Glob trajectories: {}'.format(num_glob_trajectoris))
+
+    def gen_hsv(self, cnt):
+        hsv = np.full((cnt, 3), 1.0)
+        hsv[:, 0] = np.linspace(0.0, 0.8, cnt)
+        return [hsv_to_rgb(color) for color in hsv]
+
+    def plot_glob(self, ax, global_trajectory, color=None):
+        if IS_PLOT:
+            color = color if color is not None else ('#ff0000' if global_trajectory.ok else '#aaaaaa')
+            ax[3][0].plot(global_trajectory.pos[:, 0], global_trajectory.pos[:, 1], color=color, alpha=0.5)
+
+    def plot_lat(self, ax, lat_trajectory, color=None):
+        if IS_PLOT:
+            color = color if color is not None else ('#ff0000' if lat_trajectory.ok else '#aaaaaa')
+            ax[0][0].plot(lat_trajectory.t, lat_trajectory.x, color=color)
+            ax[1][0].plot(lat_trajectory.t, lat_trajectory.dx, color=color)
+            ax[2][0].plot(lat_trajectory.t, lat_trajectory.ddx, color=color)
+
+    def plot_lon(self, ax, lon_trajectory, color=None):
+        if IS_PLOT:
+            color = color if color is not None else ('#ff0000' if lon_trajectory.ok else '#aaaaaa')
+            ax[0][1].plot(lon_trajectory.t, lon_trajectory.x, color=color)
+            ax[1][1].plot(lon_trajectory.t, lon_trajectory.dx, color=color)
+            ax[2][1].plot(lon_trajectory.t, lon_trajectory.ddx, color=color)
 
     # Get the car's pos, vel, yaw from the car_msgs/CarState
     # pos - position (vector)
@@ -169,56 +188,67 @@ class MotionPlanner:
         a = (s1[1] - s0[1]) / t
         return t, np.array([0, 0, 0, a / 2, s0[1], 0])
 
-    def __arange(self, min, max, step):
-        return np.arange(min, max + step, step)
+    # arange with closed interval
+    # if end border won't include in arange, step will be
+    # changed a bit to fit last value exact to the end border
+    def __arange(self, start, stop, step):
+        eps = 0.001
+        cnt = int((stop - start) // step + 1)
+        last = start + (cnt - 1) * step
+        if abs(last - stop) <= eps:
+            return start + np.array(range(cnt)) * step
+        else:
+            # new_step = (end - start) / cnt
+            # mrng = start + np.array(range(cnt + 1)) * new_step
+            return np.linspace(start, stop, cnt)
 
     # Calculate set lateral trajectories
-    def __calc_lat_trajectories(self, D0, D1, t_values):
-        lat_trajectories = []
-        for di in self.__arange(D_MIN, D_MAX, D_STEP):
-            coefs = quintic.calc_coefs(D0, (di, 0, 0), t_values[-1])
-            trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
+    def __calc_lat_trajectory(self, D0, D1, t):
+        #print('lat')
+        #print('D0: {}'.format(D0))
+        #print('D1: {}'.format(D0))
+        #print('t:  {}'.format(t))
 
-            # Calculate cost
-            jerk = quintic.inerpolate_jerk(coefs, t_values)
-            trajectory.cost = K_LAT_J * self.__integrate_jerk(jerk) + \
-                                  K_LAT_T * t_values[-1] + \
-                                  K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
-            trajectory.ok = self.__check_lat_constraints(trajectory)
-            lat_trajectories.append(trajectory)
+        t_values = np.arange(0, t, T_CALC_STEP)
+        coefs = quintic.calc_coefs(D0, D1, t)
+        trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
-        return lat_trajectories
+        # Calculate cost
+        jerk = quintic.inerpolate_jerk(coefs, t_values)
+        trajectory.cost = K_LAT_J * self.__integrate_jerk(jerk) + \
+                              K_LAT_T * t + \
+                              K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
+        trajectory.ok = self.__check_lat_constraints(trajectory)
+        return trajectory
 
     # Calculate a single longitudinal trajectory for given start and end conditions
-    def __calc_lon_trajectories(self, S0, S1, t_values):
-        for si in self.__arange(S1[0]-S_DEV, S1[0]+S_DEV, S_STEP):
-            coefs = quintic.calc_coefs(S0, (si, S1[1], 0), t_values[-1])
-            trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
+    def __calc_lon_trajectory(self, S0, S1, t):
+        #print('lon')
+        #print('S0: {}'.format(S0))
+        #print('S1: {}'.format(S0))
+        #print('t:  {}'.format(t))
 
-            # Calculate cost
-            jerk = quintic.inerpolate_jerk(coefs, t_values)
-            trajectory.cost = K_LON_J * self.__integrate_jerk(jerk) + \
-                                  K_LON_T * t_values[-1] + \
-                                  K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
-                                  K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
-            trajectory.ok = self.__check_lon_constraints(trajectory)
-            yield trajectory
+        t_values = np.arange(0, t, T_CALC_STEP)
+        coefs = quintic.calc_coefs(S0, S1, t)
+        trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
-    def __calc_wtf_lon_trajectories(self, S0, S1, t_values):
-        lon_coefs=[0, 0, 0, 0, 1, 0]
-        lon_trajectory = Trajectory1D(t_values, *quintic.interpolate(lon_coefs, t_values))
-        yield lon_trajectory
+        # Calculate cost
+        jerk = quintic.inerpolate_jerk(coefs, t_values)
+        trajectory.cost = K_LON_J * self.__integrate_jerk(jerk) + \
+                              K_LON_T * t + \
+                              K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
+                              K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
+        trajectory.ok = self.__check_lon_constraints(trajectory)
+        return trajectory
 
     def __integrate_jerk(self, jerk):
         return np.sum(np.square(jerk))*T_CALC_STEP
 
     def __check_lon_constraints(self, trajectory):
-        # Check longitudinal velocity and acceleration
         return (trajectory.dx <= MAX_LON_SPEED).all() and (trajectory.dx >= MIN_LON_SPEED).all() and \
                (trajectory.ddx <= MAX_LON_ACC).all() and (trajectory.ddx >= MIN_LON_DEACC).all()
 
     def __check_lat_constraints(self, trajectory):
-        # Check lateral acceleration
         return (np.abs(trajectory.ddx) <= MAX_LAT_ACC).all()
 
     def __check_combined_constraints(selfs, trajectory):
@@ -245,6 +275,7 @@ class MotionPlanner:
         return True
     
     def __init_ploting(self, S0, S1, D0, D1):
+
         fig, ax = plt.subplots(4, 2, figsize=(15, 10))
         ax = [
             [plt.subplot2grid((4, 2), (0, 0)), plt.subplot2grid((4, 2), (0, 1))],
@@ -253,6 +284,7 @@ class MotionPlanner:
             [plt.subplot2grid((4, 2), (3, 0), colspan=2)],
         ]
 
+        # Lat
         ax[0][0].set_title("Lateral trajectories")
         ax[0][0].set_xlabel("t, s")
         ax[0][0].set_ylabel("d, m")
@@ -266,6 +298,8 @@ class MotionPlanner:
         ax[2][0].set_ylabel("d'', m/s^2")
         ax[2][0].axhline(y=D0[2], color='#000000')
         ax[2][0].axhline(y=D1[2], color='#000000')
+
+        # Lon
         ax[0][1].set_title('Longitudinal trajectories')
         ax[0][1].set_xlabel("t, s")
         ax[0][1].set_ylabel("s, m")
@@ -279,6 +313,8 @@ class MotionPlanner:
         ax[2][1].set_ylabel("s'', m/s^2")
         ax[2][1].axhline(y=S0[2], color='#000000', linewidth=1)
         ax[2][1].axhline(y=S1[2], color='#000000', linewidth=1)
+
+        # Glob
         ax[3][0].set_title('Combined trajectory')
         ax[3][0].set_xlabel('s, m')
         ax[3][0].set_ylabel('d, m')

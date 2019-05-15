@@ -9,9 +9,3 @@ geometry_msgs/Pose pose
 
 # Car linear forward
 std_msgs/Float32 linear_speed
-
-# Car angular speed around z-axis
-std_msgs/Float32 angular_speed
-
-# Car steering angle
-std_msgs/Float32 steering_angle
