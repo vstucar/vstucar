@@ -33,7 +33,7 @@ path = Path()
 path.poses = array_to_path_poses(np.vstack((np.linspace(0, dist, n_points), np.zeros(n_points))).T)
 target = MotionPlanningTarget(Header(), path, get_pose(dist, 0, 0), vel1)
 
-start = time.time()
-planner.plan(cur_state, target)
-duration = time.time() - start
-print('Elapsed time: {}'.format(duration))
+#start = time.time()
+#planner.plan(cur_state, target)
+#duration = time.time() - start
+#print('Elapsed time: {}'.format(duration))

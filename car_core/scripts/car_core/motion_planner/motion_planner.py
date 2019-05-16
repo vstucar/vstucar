@@ -20,11 +20,13 @@ D_MIN = -5                  # Миимальное значение попере
 D_MAX = 5                   # Максимальное значение поперечного положения
 D_STEP = 2                  # Шаг переребора поперечных положений
 
-S_DEV = 0                  # Максимальное отклонение продольного положения вперед/назад от заданного
-S_STEP = 3                  # Шаг перебора продольных положений
+S_MIN = 20                   # Минимальное значение продольного положения
+S_MAX = 25                  # Максимальное значение продольного положения
+S_STEP = 5                  # Шаг перебора продольных положений
 
-V_DEV = 0.0                 # Максимальное отклонение продольной скорости в большую/меньшую сторону от заданного
-V_STEP = 1                  # Шаг перебора продольных скоростей
+V_MIN = 5                   # Минимальное значение скорости
+V_MAX = 10                  # Максимальное значение скорости
+V_STEP = 5                  # Шаг перебора продольных скоростей
 
 T_DEV = 0.0                 # Максимальное отклонение времени от примерной оценки, в долях
                             # ti = [(1-T_DEV)*t_estimate, (1+T_DEV)*t_estimate]
@@ -65,16 +67,13 @@ class MotionPlanner:
             map: object which provides access to environment map
         """
         self.__map = map
+        self.__lattice = {}
+        self.__precompute_lattice()
         pass
 
 
+    """
     def plan(self, state, target):
-        """
-        Plan path
-        :param state: (car_msgs/CarState) current pose of the car
-        :param target: (car_msgs/MotionPlanningTarget) next target from behaviour planner
-        :return: optimal path in car's state space
-        """
         if state is None or target is None:
             return None
 
@@ -145,7 +144,44 @@ class MotionPlanner:
                         S1_next = S1 + s_step
                         if S1_next[0] <= s_end[0]:
                             self.plan_stage(t0_next, S0_next, S1_next, s_step, s_end, D0_next, D1, np_path, ax)
-                            
+    """
+
+    def __precompute_lattice(self):
+        root = ((0, 0, 0), (0, 0, 0))
+        ax = self.__init_ploting((S_MIN, V_MIN, 0), (S_MAX, V_MAX, 0), (D_MIN, 0, 0), (D_MAX, 0, 0))
+        self.__precompute_lattice_from_root(root)
+
+        for trajectory in self.__lattice.values():
+            self.__plot_trajectory(ax, trajectory)
+
+        plt.show()
+
+    # Precompute tree of the trajectories from one root
+    def __precompute_lattice_from_root(self, root):
+
+        S0 = root[0]
+        D0 = root[1]
+
+        for vi in self.__arange(V_MIN, V_MAX, V_STEP):
+            for si in self.__arange(S_MIN, S_MAX, S_STEP):
+                S1i = (si, vi, 0)
+
+                t_estimate = self.__calc_baseline_coefs(S0, S1i)
+                for ti in self.__arange((1 - T_DEV) * t_estimate, (1 + T_DEV) * t_estimate, T_STEP):
+                    lon_trajectory = self.__calc_lon_trajectory(S0, S1i, ti)
+
+                    for di in self.__arange(D_MIN, D_MAX, D_STEP):
+                        D1i = (di, 0, 0)
+                        lat_trajectory = self.__calc_lat_trajectory(D0, D1i, ti)
+
+                        cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
+                        combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory, cost)
+                        self.__lattice[(S1i, D1i)] = combined_trajectory
+
+    def __plot_trajectory(self, ax, trajectory):
+        self.plot_lon(ax, trajectory.raw_lon)
+        self.plot_lat(ax, trajectory.raw_lat)
+        self.plot_glob(ax, trajectory)
 
     def gen_hsv(self, cnt):
         hsv = np.full((cnt, 3), 1.0)
@@ -154,19 +190,19 @@ class MotionPlanner:
 
     def plot_glob(self, ax, global_trajectory, color=None):
         if IS_PLOT:
-            color = color if color is not None else ('#ff0000' if global_trajectory.ok else '#aaaaaa')
+            color = None #color if color is not None else ('#ff0000' if global_trajectory.ok else '#aaaaaa')
             ax[3][0].plot(global_trajectory.pos[:, 0], global_trajectory.pos[:, 1], color=color, alpha=0.5)
 
     def plot_lat(self, ax, lat_trajectory, t0=0, color=None):
         if IS_PLOT:
-            color = color if color is not None else ('#ff0000' if lat_trajectory.ok else '#aaaaaa')
+            color = None #color if color is not None else ('#ff0000' if lat_trajectory.ok else '#aaaaaa')
             ax[0][0].plot(t0 + lat_trajectory.t, lat_trajectory.x, color=color)
             ax[1][0].plot(t0 + lat_trajectory.t, lat_trajectory.dx, color=color)
             ax[2][0].plot(t0 + lat_trajectory.t, lat_trajectory.ddx, color=color)
 
     def plot_lon(self, ax, lon_trajectory, t0=0, color=None):
         if IS_PLOT:
-            color = color if color is not None else ('#ff0000' if lon_trajectory.ok else '#aaaaaa')
+            color = None #color if color is not None else ('#ff0000' if lon_trajectory.ok else '#aaaaaa')
             ax[0][1].plot(t0 + lon_trajectory.t, lon_trajectory.x, color=color)
             ax[1][1].plot(t0 + lon_trajectory.t, lon_trajectory.dx, color=color)
             ax[2][1].plot(t0 + lon_trajectory.t, lon_trajectory.ddx, color=color)
@@ -233,8 +269,8 @@ class MotionPlanner:
     def __calc_lat_trajectory(self, D0, D1, t1):
         #print('lat')
         #print('D0: {}'.format(D0))
-        #print('D1: {}'.format(D0))
-        #print('t:  {}'.format(t))
+        #print('D1: {}'.format(D1))
+        #print('t:  {}'.format(t1))
 
         t_values = np.arange(0, t1, T_CALC_STEP)
         coefs = quintic.calc_coefs(D0, D1, t1)
@@ -252,8 +288,8 @@ class MotionPlanner:
     def __calc_lon_trajectory(self, S0, S1, t1):
         #print('lon')
         #print('S0: {}'.format(S0))
-        #print('S1: {}'.format(S0))
-        #print('t:  {}'.format(t))
+        #print('S1: {}'.format(S1))
+        #print('t:  {}'.format(t1))
 
         t_values = np.arange(0, t1, T_CALC_STEP)
         coefs = quintic.calc_coefs(S0, S1, t1)

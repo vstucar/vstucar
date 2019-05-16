@@ -31,7 +31,6 @@ class Trajectory1D:
         self.ddx = ddx
         self.t = t
         self.cost = sys.float_info.max
-        self.ok = True
 
     def len(self):
         return len(self.t)
@@ -46,7 +45,7 @@ class Trajectory2D:
     """
 
     @staticmethod
-    def from_frenet(lon, lat):
+    def from_frenet(lon, lat, cost):
         """
         Creates Trajectory2D of pair of trajectories in Frenet Frame
         Args:
@@ -60,9 +59,9 @@ class Trajectory2D:
         pos = np.vstack((lon.x, lat.x)).T          # 2D Position
         dpos = np.vstack((lon.dx, lat.dx)).T       # 2D Velocity (dpos/dt)
         ddpos = np.vstack((lon.ddx, lat.ddx)).T    # 2D Acceleration (d2pos/dt&^2)
-        return Trajectory2D(lon.t, pos, dpos, ddpos, lon.ok and lat.ok)
+        return Trajectory2D(lon.t, pos, dpos, ddpos, lon, lat, cost)
 
-    def __init__(self, t, pos, dpos, ddpos, ok = True):
+    def __init__(self, t, pos, dpos, ddpos, lon, lat, cost):
         """
         Creates Trajectory2D of raw data
         Args:
@@ -75,4 +74,6 @@ class Trajectory2D:
         self.pos = pos
         self.dpos = dpos
         self.ddpos = ddpos
-        self.ok = ok
+        self.raw_lon = lon
+        self.raw_lat = lat
+        self.cost = cost
