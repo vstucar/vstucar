@@ -45,7 +45,7 @@ class Trajectory2D:
     """
 
     @staticmethod
-    def from_frenet(lon, lat, cost):
+    def from_frenet(lon, lat):
         """
         Creates Trajectory2D of pair of trajectories in Frenet Frame
         Args:
@@ -59,9 +59,9 @@ class Trajectory2D:
         pos = np.vstack((lon.x, lat.x)).T          # 2D Position
         dpos = np.vstack((lon.dx, lat.dx)).T       # 2D Velocity (dpos/dt)
         ddpos = np.vstack((lon.ddx, lat.ddx)).T    # 2D Acceleration (d2pos/dt&^2)
-        return Trajectory2D(lon.t, pos, dpos, ddpos, lon, lat, cost)
+        return Trajectory2D(lon.t, pos, dpos, ddpos, lon, lat)
 
-    def __init__(self, t, pos, dpos, ddpos, lon, lat, cost):
+    def __init__(self, t, pos, dpos, ddpos, lon, lat):
         """
         Creates Trajectory2D of raw data
         Args:
@@ -76,4 +76,5 @@ class Trajectory2D:
         self.ddpos = ddpos
         self.raw_lon = lon
         self.raw_lat = lat
-        self.cost = cost
+        self.start = None
+        self.end = None

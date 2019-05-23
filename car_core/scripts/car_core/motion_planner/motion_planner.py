@@ -14,19 +14,20 @@ from trajectory import Trajectory1D, Trajectory2D
 import quintic
 import matplotlib.pyplot as plt
 from matplotlib.colors import hsv_to_rgb
+from collections import deque
 
 # Параметры перебора вариантов
-D_MIN = -5.0                  # Миимальное значение поперечного положения
-D_MAX = 5.0                   # Максимальное значение поперечного положения
-D_STEP = 2.0                  # Шаг переребора поперечных положений
+D_MIN = -3.0                  # Миимальное значение поперечного положения
+D_MAX = 3.0                   # Максимальное значение поперечного положения
+D_STEP = 3.0                  # Шаг переребора поперечных положений
 
-S_MIN = 20.0                   # Минимальное значение продольного положения
-S_MAX = 20.0                  # Максимальное значение продольного положения
+S_MIN = 10.0                  # Минимальное значение продольного положения
+S_MAX = 10.0                  # Максимальное значение продольного положения
 S_STEP = 5.0                  # Шаг перебора продольных положений
 
-V_MIN = 10.0                   # Минимальное значение скорости
-V_MAX = 10.0                  # Максимальное значение скорости
-V_STEP = 0.0                  # Шаг перебора продольных скоростей
+V_MIN = 0.0                  # Минимальное значение скорости   (относительно текущей скорости)
+V_MAX = 0.0                   # Максимальное значение скорости  (относительно текущей скорости)
+V_STEP = 1.0                  # Шаг перебора продольных скоростей
 
 T_DEV = 0.0                 # Максимальное отклонение времени от примерной оценки, в долях
                             # ti = [(1-T_DEV)*t_estimate, (1+T_DEV)*t_estimate]
@@ -67,10 +68,12 @@ class MotionPlanner:
             map: object which provides access to environment map
         """
         self.__map = map
-        self.__lattice = {}
-        self.__create_endpoints()
+
+        #self.__lattice = {}
+        #self.__create_endpoints()
         self.__precompute_lattice()
-        pass
+
+
 
 
     """
@@ -147,47 +150,56 @@ class MotionPlanner:
                             self.plan_stage(t0_next, S0_next, S1_next, s_step, s_end, D0_next, D1, np_path, ax)
     """
 
-    # Calc lattice endpoints to make future calculations on regular grid
-    def __create_endpoints(self):
-        self.__d_endpoints = []
-        self.__s_endpoints = []
-
-        for di in self.__arange(D_MIN, D_MAX, D_STEP):
-            self.__d_endpoints.append((di, 0, 0))
-
-        for vi in self.__arange(V_MIN, V_MAX, V_STEP):
-            for si in self.__arange(S_MIN, S_MAX, S_STEP):
-                self.__s_endpoints.append((si, vi, 0))
-
     # Precompute lattice graph
     def __precompute_lattice(self):
-        root = ((0, 15, 0), (0, 0, 0))
-        ax = self.__init_ploting((S_MIN, V_MIN, 0), (S_MAX, V_MAX, 0), (D_MIN, 0, 0), (D_MAX, 0, 0))
-        self.__precompute_lattice_from_root(root)
 
-        for trajectory in self.__lattice.values():
-            self.__plot_trajectory(ax, trajectory)
+        ax = self.__init_ploting((S_MIN, V_MIN, 0), (S_MAX, V_MAX, 0), (D_MIN, 0, 0), (D_MAX, 0, 0))
+        graph = {}
+        roots = deque()
+        next_roots = deque()
+        max_layers = 3
+
+        roots.append((0, (0, 15, 0), (0, 0, 0)))
+        for layer in range(max_layers):
+            while len(roots) > 0:
+                root = roots.pop()
+                self.__precompute_lattice_from_root(root, graph, next_roots)
+            next_roots, roots = roots, next_roots
+
+        for root in graph:
+            print(root)
+            for trajectory in graph[root]:
+                print("\t{}".format(trajectory.end))
+                self.__plot_trajectory(ax, trajectory)
 
         plt.show()
 
     # Precompute tree of the trajectories from one root
-    def __precompute_lattice_from_root(self, root):
+    def __precompute_lattice_from_root(self, root, graph, roots):
 
-        S0 = root[0]
-        D0 = root[1]
+        #ax = self.__init_ploting((S0[0] + S_MIN, S0[1] + V_MIN, 0), (S0[0] + S_MAX, S0[1] + V_MAX, 0), (D_MIN, 0, 0), (D_MAX, 0, 0))
+        T0, S0, D0 = root
+        graph[root] = []
 
-        for S1i in self.__s_endpoints:
-            t_estimate = self.__calc_baseline_coefs(S0, S1i)
-            print(t_estimate)
-            for ti in self.__arange((1 - T_DEV) * t_estimate, (1 + T_DEV) * t_estimate, T_STEP):
-                lon_trajectory = self.__calc_lon_trajectory(S0, S1i, ti)
+        for v1i in self.__arange(S0[1] + V_MIN, S0[1] + V_MAX, V_STEP):
+            if v1i < 0:
+                continue
 
-                for D1i in self.__d_endpoints:
-                    lat_trajectory = self.__calc_lat_trajectory(D0, D1i, ti)
+            for s1i in self.__arange(S0[0] + S_MIN, S0[0] + S_MAX, S_STEP):
+                S1i = (s1i, v1i, 0)
+                t_estimate = T0 + self.__estimate_time(S0, S1i)
+                for ti in self.__arange((1 - T_DEV) * t_estimate, (1 + T_DEV) * t_estimate, T_STEP):
+                    lon_trajectory = self.__calc_sub_trajectory(S0, S1i, T0, ti)
 
-                    cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
-                    combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory, cost)
-                    self.__lattice[(S1i, D1i)] = combined_trajectory
+                    for d1i in self.__arange(D_MIN, D_MAX, D_STEP):
+                        D1i = (d1i, 0, 0)
+                        lat_trajectory = self.__calc_sub_trajectory(D0, D1i, T0, ti)
+
+                        combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory)
+                        combined_trajectory.cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
+                        combined_trajectory.end = (ti, S1i, D1i)
+                        graph[root].append(combined_trajectory)
+                        roots.append(combined_trajectory.end)
 
     def __plot_trajectory(self, ax, trajectory):
         self.plot_lon(ax, trajectory.raw_lon)
@@ -255,19 +267,20 @@ class MotionPlanner:
     # uniformly accelerated motion
     # s0, s1 - current and target longitudinal states in
     #          Frenet Frame
-    def __calc_baseline_coefs(self, s0, s1):
+    def __estimate_time(self, s0, s1):
         # v1 = v0 + a*t
         # s1 = s0 + v0*t + a*t^2/2
         t = (2 * (s1[0] - s0[0])) / (s0[1] + s1[1])
+        #a = (s0[1]**2 - s1[1]**2)/(2*(s0[0] - s1[0]))
         return t
-        #a = (s1[1] - s0[1]) / t
-        #return t, np.array([0, 0, 0, a / 2, s0[1], 0])
 
     # arange with closed interval
     # if end border won't include in arange, step will be
     # changed a bit to fit last value exact to the end border
     def __arange(self, start, stop, step):
         eps = 0.001
+        assert abs(step) > eps, "eps = {}".format(eps)
+
         if abs(start - stop) < eps:
             return [start]
 
@@ -280,42 +293,30 @@ class MotionPlanner:
             # mrng = start + np.array(range(cnt + 1)) * new_step
             return np.linspace(start, stop, cnt)
 
-    # Calculate set lateral trajectories
-    def __calc_lat_trajectory(self, D0, D1, t1):
-        #print('lat')
-        #print('D0: {}'.format(D0))
-        #print('D1: {}'.format(D1))
-        #print('t:  {}'.format(t1))
+    # Lon cost
+    # jerk = quintic.inerpolate_jerk(coefs, t_values)
+    # trajectory.cost = K_LON_J * self.__integrate_jerk(jerk) + \
+    #                      K_LON_T * t1 + \
+    #                      K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
+    #                      K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
 
-        t_values = np.arange(0, t1, T_CALC_STEP)
-        coefs = quintic.calc_coefs(D0, D1, t1)
-        trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
-        # Calculate cost
-        jerk = quintic.inerpolate_jerk(coefs, t_values)
-        trajectory.cost = K_LAT_J * self.__integrate_jerk(jerk) + \
-                              K_LAT_T * t1 + \
-                              K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
-        trajectory.ok = self.__check_lat_constraints(trajectory)
-        return trajectory
+    # Lat
+    # trajectory.cost = K_LAT_J * self.__integrate_jerk(jerk) + \
+    #                      K_LAT_T * t1 + \
+    #                      K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
 
     # Calculate a single longitudinal trajectory for given start and end conditions
-    def __calc_lon_trajectory(self, S0, S1, t1):
-        #print('lon')
+    def __calc_sub_trajectory(self, S0, S1, t0, t1):
         #print('S0: {}'.format(S0))
         #print('S1: {}'.format(S1))
-        #print('t:  {}'.format(t1))
+        #print('t:  {} - {} ({})'.format(t0, t1, t1-t0))
 
-        t_values = np.arange(0, t1, T_CALC_STEP)
-        coefs = quintic.calc_coefs(S0, S1, t1)
-        trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
+        t_values = np.arange(0, t1-t0, T_CALC_STEP)
+        coefs = quintic.calc_coefs(S0, S1, t1-t0)
+        trajectory = Trajectory1D(t_values + t0, *quintic.interpolate(coefs, t_values))
 
-        # Calculate cost
-        jerk = quintic.inerpolate_jerk(coefs, t_values)
-        trajectory.cost = K_LON_J * self.__integrate_jerk(jerk) + \
-                              K_LON_T * t1 + \
-                              K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
-                              K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
+        trajectory.cost = self.__integrate_jerk(quintic.inerpolate_jerk(coefs, t_values))
         trajectory.ok = self.__check_lon_constraints(trajectory)
         return trajectory
 
