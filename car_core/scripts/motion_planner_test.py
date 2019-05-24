@@ -21,13 +21,17 @@ def get_pose(x, y, yaw):
 fake_map = Map()
 planner = MotionPlanner(fake_map)
 
-cur_state = CarState(get_pose(0, 0, 0), 8, 0, 0)
+start_speed = 15
+end_pos = 40
+end_speed = 15
+
+cur_state = CarState(get_pose(0, 0, 0), start_speed, 0, 0)
 cur_state
 
 n_points = 10
-dist = 10
+dist = end_pos
 path = Path()
 path.poses = array_to_path_poses(np.vstack((np.linspace(0, dist, n_points), np.zeros(n_points))).T)
-target = MotionPlanningTarget(Header(), path, 15, 0, get_pose(15, 0, 0))
+target = MotionPlanningTarget(Header(), path, end_pos, end_speed, get_pose(end_pos, 0, 0))
 
 planner.plan(cur_state, target)

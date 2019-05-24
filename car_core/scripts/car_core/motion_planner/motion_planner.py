@@ -16,39 +16,42 @@ import matplotlib.pyplot as plt
 
 # Параметры перебора вариантов
 ROAD_WIDTH = 3.5*2          # Ширина дороги - допустимой для езды области
-D_MIN = 5 #-ROAD_WIDTH/2       # Миимальное значение поперечного положения
-D_MAX = 5 #ROAD_WIDTH/2        # Максимальное значение поперечного положения
+D_MIN = -ROAD_WIDTH/2       # Миимальное значение поперечного положения
+D_MAX = ROAD_WIDTH/2        # Максимальное значение поперечного положения
 D_STEP = 1                  # Шаг переребора поперечных положений
 
 S_DEV = 0                   # Максимальное отклонение продольного положения вперед/назад от заданного
                             # si = [s_target - S_DEV, s_target + S_DEV]
-S_STEP = 3                  # Шаг перебора продольных положений
+S_STEP = 5                  # Шаг перебора продольных положений
 
-T_DEV = 0.0                 # Максимальное отклонение времени от примерной оценки
+T_DEV = 0                   # Максимальное отклонение времени от примерной оценки
                             # ti = [(1-T_DEV)*t_estimate, (1+T_DEV)*t_estimate]
-T_CNT = 4                   # Количество переборов времени
+T_CNT = 1                   # Количество переборов времени
 
 # Параметры расчета
 T_CALC_STEP = 0.1           # Шаг интерполяции по времени
 
 # Параметры ограничений
-MAX_LON_SPEED = 12          # Maximum longitudinal speed
-MIN_LON_SPEED = 0           # Minimum longitudinal speed (0, to remove strange results)
-MAX_LON_ACC = 5             # Maximum longitudinal acceleration
-MIN_LON_DEACC = -5          # Minimum longitudinal deacceleration (breaking)
-MAX_LAT_ACC = 1             # Maximum lateral acceleration
+MAX_LON_SPEED = 50          # Maximum longitudinal speed
+MIN_LON_SPEED = -1          # Minimum longitudinal speed (0, to remove strange results)
+MAX_LON_ACC = 10            # Maximum longitudinal acceleration
+MIN_LON_DEACC = -10         # Minimum longitudinal deacceleration (breaking)
+MAX_LAT_ACC = 10            # Maximum lateral acceleration
 MIN_CURV_RADIUS = 0         # Minimum curvature radius
 
 # Cost function coefficients
-K_LAT_J =  1
-K_LAT_T =  1
+K_LAT_J =  0
+K_LAT_T =  0
 K_LAT_D =  1
-K_LON_J =  1
-K_LON_T =  1
-K_LON_S =  1
-K_LON_DS = 1
-K_LON    = 1
+K_LON_J =  0
+K_LON_T =  0
+K_LON_S =  0
+K_LON_DS = 0
+K_LON    = 0
 K_LAT    = 1
+
+
+
 
 class MotionPlanner:
     """
@@ -94,44 +97,36 @@ class MotionPlanner:
         t_min = (1 - T_DEV) * t_estimate
         t_max = (1 + T_DEV) * t_estimate
 
-        optimal_trajectory = None
-        min_cost = sys.float_info.max
+        optimal_trajectory = Trajectory2D()
 
-        ax = self.__init_ploting(S0, S1, D0, D1)
+        #ax = self.__init_ploting(S0, S1, D0, D1)
+        fig, ax = plt.subplots(1, 1, figsize=(15, 4))
+        ax.set_title('Combined trajectory')
+        ax.set_xlabel('s, m')
+        ax.set_ylabel('d, m')
 
         # Calculate trajectories
         for ti in np.linspace(t_min, t_max, T_CNT):
+            #print('ti={}'.format(ti))
             t_values = np.arange(0, ti, T_CALC_STEP)
             lat_trajectories = self.__calc_lat_trajectories(D0, D1, t_values)
 
-            for lat_trajectory in lat_trajectories:
-                color = '#ff0000' if lat_trajectory.ok else '#aaaaaa'
-                ax[0][0].plot(lat_trajectory.t, lat_trajectory.x, color=color)
-                ax[1][0].plot(lat_trajectory.t, lat_trajectory.dx, color=color)
-                ax[2][0].plot(lat_trajectory.t, lat_trajectory.ddx, color=color)
-
             for lon_trajectory in self.__calc_lon_trajectories(S0, S1, t_values):
-                color = '#ff0000' if lon_trajectory.ok else '#aaaaaa'
-                ax[0][1].plot(lon_trajectory.t, lon_trajectory.x, color=color)
-                ax[1][1].plot(lon_trajectory.t, lon_trajectory.dx, color=color)
-                ax[2][1].plot(lon_trajectory.t, lon_trajectory.ddx, color=color)
-
+                #print('lon')
 
                 # Combine current lon-trajectory (ti, si) with set of lat-trajectories [(ti, d0), (ti, d1), ...],
                 for lat_trajectory in lat_trajectories:
                     combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory)
-                    #combined_trajectory.ok = self.__check_combined_constraints(combined_trajectory)
+                    combined_trajectory.cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
+                    ax.plot(combined_trajectory.pos[:, 0], combined_trajectory.pos[:, 1], color='#aaaaaa', alpha=0.5)
+                    print(combined_trajectory.cost)
 
-                    cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
-                    #if cost < min_cost:
-                    global_trajectory = path_to_global(combined_trajectory, np_path)
-                    color = '#ff0000' if global_trajectory.ok else '#aaaaaa'
-                    ax[3][0].plot(global_trajectory.pos[:, 0], global_trajectory.pos[:, 1], color=color, alpha=0.5)
-                    #if not self.__check_obstacles(global_trajectory):
-                    #    min_cost = cost
-                    #    optimal_trajectory = global_trajectory
+                    if optimal_trajectory.cost > combined_trajectory.cost:
+                        optimal_trajectory = combined_trajectory
 
+        ax.plot(optimal_trajectory.pos[:, 0], optimal_trajectory.pos[:, 1], color='#ff0000', alpha=0.5)
 
+        ax.set_aspect('equal', adjustable='box')
         plt.show()
         return optimal_trajectory
 
@@ -169,8 +164,24 @@ class MotionPlanner:
         a = (s1[1] - s0[1]) / t
         return t, np.array([0, 0, 0, a / 2, s0[1], 0])
 
-    def __arange(self, min, max, step):
-        return np.arange(min, max + step, step)
+    # arange with closed interval
+    # if end border won't include in arange, step will be
+    # changed a bit to fit last value exact to the end border
+    def __arange(self, start, stop, step):
+            eps = 0.001
+            assert abs(step) > eps, "eps = {}".format(eps)
+
+            if abs(start - stop) < eps:
+                return [start]
+
+            cnt = int((stop - start) // step + 1)
+            last = start + (cnt - 1) * step
+            if abs(last - stop) <= eps:
+                return start + np.array(range(cnt)) * step
+            else:
+                # new_step = (end - start) / cnt
+                # mrng = start + np.array(range(cnt + 1)) * new_step
+                return np.linspace(start, stop, cnt)
 
     # Calculate set lateral trajectories
     def __calc_lat_trajectories(self, D0, D1, t_values):
@@ -180,10 +191,9 @@ class MotionPlanner:
             trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
             # Calculate cost
-            jerk = quintic.inerpolate_jerk(coefs, t_values)
-            trajectory.cost = K_LAT_J * self.__integrate_jerk(jerk) + \
-                                  K_LAT_T * t_values[-1] + \
-                                  K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
+            trajectory.cost = K_LAT_J * self.__jerk2_integral(coefs, t_values[-1]) + \
+                              K_LAT_T * t_values[-1] + \
+                              K_LAT_D * (trajectory.x[-1] - D1[0]) ** 2
             trajectory.ok = self.__check_lat_constraints(trajectory)
             lat_trajectories.append(trajectory)
 
@@ -196,11 +206,10 @@ class MotionPlanner:
             trajectory = Trajectory1D(t_values, *quintic.interpolate(coefs, t_values))
 
             # Calculate cost
-            jerk = quintic.inerpolate_jerk(coefs, t_values)
-            trajectory.cost = K_LON_J * self.__integrate_jerk(jerk) + \
-                                  K_LON_T * t_values[-1] + \
-                                  K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
-                                  K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
+            trajectory.cost = K_LON_J * self.__jerk2_integral(coefs, t_values[-1]) + \
+                              K_LON_T * t_values[-1] + \
+                              K_LON_S * (trajectory.x[-1] - S1[0]) ** 2 + \
+                              K_LON_DS * (trajectory.dx[-1] - S1[1]) ** 2
             trajectory.ok = self.__check_lon_constraints(trajectory)
             yield trajectory
 
@@ -209,8 +218,11 @@ class MotionPlanner:
         lon_trajectory = Trajectory1D(t_values, *quintic.interpolate(lon_coefs, t_values))
         yield lon_trajectory
 
-    def __integrate_jerk(self, jerk):
-        return np.sum(np.square(jerk))*T_CALC_STEP
+    #def __integrate_jerk(self, jerk):
+    #    return np.sum(np.square(jerk))*T_CALC_STEP
+
+    def __jerk2_integral(self, coefs, T):
+        return 36*coefs[2]**2*T + 144*coefs[1]*coefs[2]*T**2 + 192*coefs[1]**2*T**3 + 240*coefs[0]*coefs[2]*T**3 + 720*coefs[0]*coefs[1]*T**4 + 720*coefs[0]**2*T**5
 
     def __check_lon_constraints(self, trajectory):
         # Check longitudinal velocity and acceleration

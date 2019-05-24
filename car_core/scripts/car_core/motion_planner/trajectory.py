@@ -5,6 +5,7 @@
 
 import numpy as np
 import sys
+import sys
 
 
 class Trajectory1D:
@@ -62,7 +63,7 @@ class Trajectory2D:
         ddpos = np.vstack((lon.ddx, lat.ddx)).T    # 2D Acceleration (d2pos/dt&^2)
         return Trajectory2D(lon.t, pos, dpos, ddpos, lon.ok and lat.ok)
 
-    def __init__(self, t, pos, dpos, ddpos, ok = True):
+    def __init__(self, t=None, pos=None, dpos=None, ddpos=None, ok=True):
         """
         Creates Trajectory2D of raw data
         Args:
@@ -76,3 +77,4 @@ class Trajectory2D:
         self.dpos = dpos
         self.ddpos = ddpos
         self.ok = ok
+        self.cost = sys.float_info.max

@@ -42,5 +42,5 @@ def interpolate(coefs, x):
     return y, dy, ddy
 
 # Interpolate jerk (d3y/dx^3)
-def inerpolate_jerk(coefs, x):
-    return npoly.polyval(x, [6*coefs[2], 24*coefs[1], 60*coefs[0]])
+#def inerpolate_jerk(coefs, x):
+#    return npoly.polyval(x, [6*coefs[2], 24*coefs[1], 60*coefs[0]])
