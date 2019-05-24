@@ -16,11 +16,11 @@ import matplotlib.pyplot as plt
 
 # Параметры перебора вариантов
 ROAD_WIDTH = 3.5*2          # Ширина дороги - допустимой для езды области
-D_MIN = -ROAD_WIDTH/2       # Миимальное значение поперечного положения
-D_MAX = ROAD_WIDTH/2        # Максимальное значение поперечного положения
+D_MIN = -3                  # Миимальное значение поперечного положения
+D_MAX = 3                   # Максимальное значение поперечного положения
 D_STEP = 1                  # Шаг переребора поперечных положений
 
-S_DEV = 0                   # Максимальное отклонение продольного положения вперед/назад от заданного
+S_DEV = 15                  # Максимальное отклонение продольного положения вперед/назад от заданного
                             # si = [s_target - S_DEV, s_target + S_DEV]
 S_STEP = 5                  # Шаг перебора продольных положений
 
@@ -45,9 +45,9 @@ K_LAT_T =  0
 K_LAT_D =  1
 K_LON_J =  0
 K_LON_T =  0
-K_LON_S =  0
+K_LON_S =  1
 K_LON_DS = 0
-K_LON    = 0
+K_LON    = 1
 K_LAT    = 1
 
 
@@ -99,11 +99,19 @@ class MotionPlanner:
 
         optimal_trajectory = Trajectory2D()
 
+        obst_center = np.array([30, 0])
+        obst_radius = 1.2
+
         #ax = self.__init_ploting(S0, S1, D0, D1)
-        fig, ax = plt.subplots(1, 1, figsize=(15, 4))
-        ax.set_title('Combined trajectory')
+        fig, ax = plt.subplots(1, 1, figsize=(15, 3))
+        ax.set_title('Planning success')
         ax.set_xlabel('s, m')
         ax.set_ylabel('d, m')
+
+        obst_art = plt.Circle(obst_center, obst_radius, color='#0000ff')
+        target_art = plt.Circle([S1[0], D1[0]], 0.5, color='#ff0000')
+        ax.add_artist(obst_art)
+        ax.add_artist(target_art)
 
         # Calculate trajectories
         for ti in np.linspace(t_min, t_max, T_CNT):
@@ -118,17 +126,39 @@ class MotionPlanner:
                 for lat_trajectory in lat_trajectories:
                     combined_trajectory = Trajectory2D.from_frenet(lon_trajectory, lat_trajectory)
                     combined_trajectory.cost = K_LAT * lat_trajectory.cost + K_LON * lon_trajectory.cost
-                    ax.plot(combined_trajectory.pos[:, 0], combined_trajectory.pos[:, 1], color='#aaaaaa', alpha=0.5)
-                    print(combined_trajectory.cost)
 
-                    if optimal_trajectory.cost > combined_trajectory.cost:
+                    is_obstacle = self.__check_obstacles(combined_trajectory, obst_center, obst_radius)
+
+                    if is_obstacle:
+                        ax.plot(combined_trajectory.pos[:, 0], combined_trajectory.pos[:, 1], '--', color='#aaaaaa', alpha=0.5, label='obstacle')
+                        ax.plot([combined_trajectory.pos[-1, 0]], [combined_trajectory.pos[-1, 1]], 'o', color='#aaaaaa', markersize=6)
+                    else:
+                        ax.plot(combined_trajectory.pos[:, 0], combined_trajectory.pos[:, 1],  color='#00ff00', alpha=0.5, label='free')
+                        ax.plot([combined_trajectory.pos[-1, 0]], [combined_trajectory.pos[-1, 1]], 'o', color='#00ff00', markersize=6)
+
+
+                    if not is_obstacle and optimal_trajectory.cost > combined_trajectory.cost:
                         optimal_trajectory = combined_trajectory
 
-        ax.plot(optimal_trajectory.pos[:, 0], optimal_trajectory.pos[:, 1], color='#ff0000', alpha=0.5)
+        ax.plot(optimal_trajectory.pos[:, 0], optimal_trajectory.pos[:, 1], color='#ff0000', linewidth=4, label='optimal')
+        ax.plot([optimal_trajectory.pos[-1, 0]], [optimal_trajectory.pos[-1, 1]], 'o', color='#ff0000', markersize=6)
 
         ax.set_aspect('equal', adjustable='box')
+        self.legend(ax)
         plt.show()
         return optimal_trajectory
+
+    # Вспомогательная функция, позволяет сделать по одной записи в легенде графика
+    # для нескольких графиков с одним legend
+    def legend(self, ax):
+        handles, labels = ax.get_legend_handles_labels()
+        u_labels = []
+        u_handles = []
+        for handle, label in zip(handles, labels):
+            if label not in u_labels:
+                u_labels.append(label)
+                u_handles.append(handle)
+        ax.legend(u_handles, u_labels)
 
     # Get the car's pos, vel, yaw from the car_msgs/CarState
     # pos - position (vector)
@@ -249,12 +279,8 @@ class MotionPlanner:
         print('R: min: %f, max: %f' % (np.min(radius), np.max(radius)))
         return (radius >= MIN_CURV_RADIUS).all()
 
-    def __check_obstacles(self, trajectory):
-        # TODO:
-        for t, pos in zip(trajectory.t, trajectory.pos):
-            if self.__map.is_obstacle(t, pos):
-                return False
-        return True
+    def __check_obstacles(self, trajectory, center, radius):
+        return np.any(np.linalg.norm(trajectory.pos - center, axis=1) < radius)
     
     def __init_ploting(self, S0, S1, D0, D1):
         fig, ax = plt.subplots(4, 2, figsize=(15, 10))
