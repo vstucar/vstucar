@@ -16,8 +16,8 @@ import matplotlib.pyplot as plt
 
 # Параметры перебора вариантов
 ROAD_WIDTH = 3.5*2          # Ширина дороги - допустимой для езды области
-D_MIN = -3                  # Миимальное значение поперечного положения
-D_MAX = 3                   # Максимальное значение поперечного положения
+D_MIN = -5                  # Миимальное значение поперечного положения
+D_MAX = 5                   # Максимальное значение поперечного положения
 D_STEP = 1                  # Шаг переребора поперечных положений
 
 S_DEV = 15                  # Максимальное отклонение продольного положения вперед/назад от заданного
@@ -39,13 +39,16 @@ MIN_LON_DEACC = -10         # Minimum longitudinal deacceleration (breaking)
 MAX_LAT_ACC = 10            # Maximum lateral acceleration
 MIN_CURV_RADIUS = 0         # Minimum curvature radius
 
+# Change behaviour
+IS_SUCCESS = False
+
 # Cost function coefficients
 K_LAT_J =  0
 K_LAT_T =  0
 K_LAT_D =  1
 K_LON_J =  0
 K_LON_T =  0
-K_LON_S =  1
+K_LON_S =  1 if IS_SUCCESS else 0
 K_LON_DS = 0
 K_LON    = 1
 K_LAT    = 1
@@ -103,8 +106,12 @@ class MotionPlanner:
         obst_radius = 1.2
 
         #ax = self.__init_ploting(S0, S1, D0, D1)
-        fig, ax = plt.subplots(1, 1, figsize=(15, 3))
-        ax.set_title('Planning success')
+        fig, ax = plt.subplots(1, 1, figsize=(12, 3), dpi=150)
+        plt.rcParams.update({'font.size': 14})
+        if IS_SUCCESS:
+            ax.set_title('Planning success')
+        else:
+            ax.set_title('Planning failed')
         ax.set_xlabel('s, m')
         ax.set_ylabel('d, m')
 
